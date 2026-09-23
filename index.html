@@ -3566,6 +3566,9 @@
             videoIndex, requiredFrame: 1, label })),
         // One last clean pass of the table, then the framework it all rolls up
         // into.
+        // Lands on the clean table first, so the what-breaks row builds in
+        // rather than being there on arrival.
+        { slide: matrixSlide, focus: 1, label: 'Table — the full shift' },
         { slide: matrixSlide, focus: 2, label: 'Table — what breaks' },
         { slide: matrixSlide, focus: 3, label: 'Table — with Sigma' },
         ...['Performance', 'Performance → decisions', '→ better / more / faster', '→ trusted decisions',
