@@ -1905,21 +1905,78 @@
   }
 
   /* ---- Slide 4: grouped / nested response ---- */
-  /* Five facts as flags off a timeline. Flags size to their own content and
-     align at the top; the pole below each one flexes to make up the difference,
-     so every tick still lands on the line and no flag carries dead space. */
+  /* The answer comes back as a table, the way the product renders records:
+     a row-number gutter, a header rule, and hairlines between rows. */
   .response-cards {
-    position: relative;
-    display: flex;
-    align-items: stretch;
-    gap: calc(0.8 * var(--vwu));
     margin-top: calc(1.2 * var(--vwu));
+    border: 1px solid var(--sigma-line);
+    border-radius: var(--sigma-radius);
+    overflow: hidden;
+    background: #fff;
   }
 
-  /* The ground the poles stand on. Both this and the cards are positioned, so
-     without the z-index pair the rule paints last and sits on top of the ticks
-     rather than running behind them. */
-  .response-cards::after {
+  /* The assistant body shrink-wraps its content, which is right for prose but
+     leaves the table half-width. Only the turn that holds one stretches. */
+  .assistant-body:has(.response-cards) {
+    width: 100%;
+  }
+
+  .fact-row {
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid var(--sigma-line);
+    opacity: 0;
+    transform: translateY(calc(0.25 * var(--vwu)));
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .fact-row.visible { opacity: 1; transform: none; }
+
+  .fact-head {
+    display: flex;
+    background: var(--sigma-surface);
+    border-bottom: 1px solid var(--sigma-line);
+  }
+
+  .fact-head > span,
+  .fact-row > span {
+    padding: calc(0.62 * var(--vwu)) calc(0.85 * var(--vwu));
+    font-family: var(--font-product);
+    font-size: calc(1.02 * var(--vwu));
+    line-height: 1.35;
+    min-width: 0;
+  }
+
+  .fact-head > span {
+    font-size: calc(0.9 * var(--vwu));
+    font-weight: 700;
+    color: var(--sigma-slate);
+  }
+
+  /* The row-number gutter is what makes it read as a sheet rather than a list. */
+  .fact-num {
+    flex: none;
+    width: calc(2.2 * var(--vwu));
+    text-align: center;
+    border-right: 1px solid var(--sigma-line);
+    background: var(--sigma-surface);
+    color: var(--sigma-slate);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fact-what {
+    flex: 0 0 36%;
+    font-weight: 700;
+    color: var(--sigma-ink);
+  }
+
+  .fact-detail {
+    flex: 1 1 auto;
+    color: var(--sigma-slate);
+  }
+
+  /* The ground the poles stood on, retired with them. */
+  .response-cards-retired::after {
     content: '';
     position: absolute;
     left: 0;
@@ -1931,6 +1988,8 @@
     background: var(--sigma-line);
   }
 
+  /* Retired with the timeline treatment: the facts render as a table now.
+     Everything from here to .response-card-detail is dormant. */
   .response-card {
     position: relative;
     z-index: 1;
@@ -3247,9 +3306,7 @@
       const STEPS = [
         { slide: titleSlide, label: 'Title' },
         { slide: chatSlide, kind: 'frame', frameIndex: 0, requiredFrame: 0, label: 'AI Slop Demo' },
-        { slide: chatSlide, kind: 'frame', frameIndex: 1, requiredFrame: 1, label: 'Facts & One Lie' },
-        // The lie isn't in the list — it's the claim that there's one at all.
-        { slide: chatSlide, kind: 'frame', frameIndex: 1, requiredFrame: 1, annotate: 'facts-lead', label: 'Facts & One Lie — The lie' },
+        { slide: chatSlide, kind: 'frame', frameIndex: 1, requiredFrame: 1, label: 'About Luke' },
         { slide: statementSlide, label: 'Fundamentally changing' },
         { slide: matrixSlide, focus: 0, label: 'Before AI' },
         { slide: matrixSlide, focus: 1, label: 'Now' },
@@ -3326,8 +3383,8 @@
           ]
         },
         {
-          prompt: "Give facts and one lie about Luke.",
-          responseLead: "Here are five facts and a lie about Luke:",
+          prompt: "Tell me about Luke",
+          responseLead: "Here's what I know about Luke:",
           responseCards: [
             { title: "Started his career as a teacher" },
             { title: "PhD in Educational Psychology", detail: "quantitative measurement in education" },
@@ -3482,35 +3539,48 @@
         });
       }
 
-      function buildFactFlag(card) {
+      const FACT_COLUMNS = ['Milestone', 'Detail'];
+
+      // Clears the container and lays the header row, so both the animated and
+      // the instant path start from the same table.
+      function mountFactTable(containerEl) {
+        containerEl.innerHTML = '';
+        const head = document.createElement('div');
+        head.className = 'fact-head';
+        const num = document.createElement('span');
+        num.className = 'fact-num';
+        head.appendChild(num);
+        ['fact-what', 'fact-detail'].forEach((cls, i) => {
+          const cell = document.createElement('span');
+          cell.className = cls;
+          cell.textContent = FACT_COLUMNS[i];
+          head.appendChild(cell);
+        });
+        containerEl.appendChild(head);
+      }
+
+      function buildFactRow(card, i) {
         const el = document.createElement('div');
-        el.className = 'response-card';
-        const flag = document.createElement('div');
-        flag.className = 'fact-flag';
-        const title = document.createElement('div');
-        title.className = 'response-card-title';
-        title.textContent = card.title;
-        flag.appendChild(title);
-        if (card.detail) {
-          const detail = document.createElement('div');
-          detail.className = 'response-card-detail';
-          detail.textContent = card.detail;
-          flag.appendChild(detail);
-        }
-        el.appendChild(flag);
-        const stem = document.createElement('span');
-        stem.className = 'fact-stem';
-        const tick = document.createElement('span');
-        tick.className = 'fact-tick';
-        el.appendChild(stem);
-        el.appendChild(tick);
+        el.className = 'fact-row';
+        const num = document.createElement('span');
+        num.className = 'fact-num';
+        num.textContent = String(i + 1);
+        const what = document.createElement('span');
+        what.className = 'fact-what';
+        what.textContent = card.title;
+        const detail = document.createElement('span');
+        detail.className = 'fact-detail';
+        detail.textContent = card.detail || '';
+        el.appendChild(num);
+        el.appendChild(what);
+        el.appendChild(detail);
         return el;
       }
 
       function revealCards(containerEl, cards, itemDelay, onDone) {
-        containerEl.innerHTML = '';
+        mountFactTable(containerEl);
         cards.forEach((card, i) => {
-          const el = buildFactFlag(card);
+          const el = buildFactRow(card, i);
           containerEl.appendChild(el);
           const t = setTimeout(() => {
             el.classList.add('visible');
@@ -3844,10 +3914,10 @@
         '</svg>';
 
       // What each step's `annotate` key points at. Resolved late so the target
-      // only has to exist when the step is actually reached.
-      const RING_TARGETS = {
-        'facts-lead': () => assistantTurns[1].querySelector('.response-lead')
-      };
+      // only has to exist when the step is actually reached. Nothing uses the
+      // ring at the moment; add a target here and an `annotate` on a step to
+      // bring it back.
+      const RING_TARGETS = {};
 
       let shownRing = null;
       let ringTarget = null;
@@ -3973,9 +4043,9 @@
         } else if (turnConfig.responseCards) {
           assistantTurn.querySelector('.response-lead').textContent = turnConfig.responseLead;
           const cardsEl = assistantTurn.querySelector('.response-cards');
-          cardsEl.innerHTML = '';
-          turnConfig.responseCards.forEach(card => {
-            const el = buildFactFlag(card);
+          mountFactTable(cardsEl);
+          turnConfig.responseCards.forEach((card, i) => {
+            const el = buildFactRow(card, i);
             el.classList.add('visible');
             cardsEl.appendChild(el);
           });
