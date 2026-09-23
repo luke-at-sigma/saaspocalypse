@@ -49,6 +49,9 @@
     --sigma-surface: #F7F7F8;
     --sigma-paper: #F4F5F7;
     --sigma-radius: calc(0.5 * var(--vwu));
+    /* Buttons and chips inside a composer, which the product rounds far less
+       than a card and never rounds to a pill. */
+    --control-radius: calc(0.35 * var(--vwu));
     --sigma-shadow: 0 calc(0.15 * var(--vwu)) calc(0.5 * var(--vwu)) rgba(0, 0, 0, 0.09), 0 calc(0.35 * var(--vwu)) calc(0.9 * var(--vwu)) rgba(0, 0, 0, 0.05);
   }
 
@@ -1541,7 +1544,7 @@
     gap: calc(0.3 * var(--vwu));
     padding: calc(0.35 * var(--vwu)) calc(0.7 * var(--vwu));
     border: 1px solid var(--sigma-line);
-    border-radius: 999px;
+    border-radius: var(--control-radius);
     font-family: var(--font-product);
     font-size: calc(0.85 * var(--vwu));
     color: var(--sigma-ink);
@@ -1554,10 +1557,12 @@
     color: var(--sigma-slate);
   }
 
+  /* Same footprint as the add-source button, the way the pair sits in the
+     product's composer. */
   .prompt-send {
-    width: calc(2.4 * var(--vwu));
-    height: calc(2.4 * var(--vwu));
-    border-radius: 50%;
+    width: calc(1.8 * var(--vwu));
+    height: calc(1.8 * var(--vwu));
+    border-radius: var(--control-radius);
     background: var(--sigma-line);
     display: flex;
     align-items: center;
@@ -1570,8 +1575,8 @@
   }
 
   .prompt-send svg {
-    width: calc(1 * var(--vwu));
-    height: calc(1 * var(--vwu));
+    width: calc(0.9 * var(--vwu));
+    height: calc(0.9 * var(--vwu));
   }
 
   /* ---- Slide 2: assistant response (plain, Sigma AI chat style — no card) ---- */
@@ -1763,7 +1768,7 @@
     flex: none;
     width: calc(1.8 * var(--vwu));
     height: calc(1.8 * var(--vwu));
-    border-radius: 50%;
+    border-radius: var(--control-radius);
     border: none;
     background: transparent;
     display: flex;
@@ -1808,9 +1813,9 @@
 
   .followup-send {
     flex: none;
-    width: calc(2 * var(--vwu));
-    height: calc(2 * var(--vwu));
-    border-radius: 50%;
+    width: calc(1.8 * var(--vwu));
+    height: calc(1.8 * var(--vwu));
+    border-radius: var(--control-radius);
     background: var(--sigma-line);
     display: flex;
     align-items: center;
@@ -1818,8 +1823,8 @@
   }
 
   .followup-send svg {
-    width: calc(0.85 * var(--vwu));
-    height: calc(0.85 * var(--vwu));
+    width: calc(0.9 * var(--vwu));
+    height: calc(0.9 * var(--vwu));
   }
 
   .composer-disclaimer {
