@@ -438,6 +438,108 @@
     color: rgba(255, 255, 255, 0.72);
   }
 
+  /* ---- Build or buy: a Sigma chat answer that happens to be a table. Same
+     chrome as the in-chat table (row gutter, header rule, hairlines) but laid
+     out across the slide, because five columns of prose can't be read at the
+     width of the chat column. ---- */
+  .slide-buildbuy.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sigma-surface);
+    font-family: var(--font-product);
+  }
+
+  .bb-wrap {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: calc(1.1 * var(--vwu));
+  }
+
+  .bb-bubble {
+    align-self: flex-end;
+    max-width: 62%;
+    padding: calc(0.9 * var(--vwu)) calc(1.3 * var(--vwu));
+    border-radius: var(--sigma-radius) var(--sigma-radius) calc(0.15 * var(--vwu)) var(--sigma-radius);
+    background: var(--sigma-blue-tint);
+    font-size: calc(1.3 * var(--vwu));
+    line-height: 1.45;
+    color: var(--sigma-ink);
+  }
+
+  .bb-lead {
+    margin: 0;
+    font-size: calc(1.24 * var(--vwu));
+    line-height: 1.6;
+    color: var(--sigma-ink);
+  }
+
+  .bb-table {
+    border: 1px solid var(--sigma-line);
+    border-radius: var(--sigma-radius);
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .bb-head {
+    display: flex;
+    background: var(--sigma-surface);
+    border-bottom: 1px solid var(--sigma-line);
+  }
+
+  .bb-row {
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid var(--sigma-line);
+  }
+
+  .bb-row:first-of-type {
+    border-top: none;
+  }
+
+  .bb-head > span,
+  .bb-row > span {
+    padding: calc(0.55 * var(--vwu)) calc(0.8 * var(--vwu));
+    font-size: calc(0.95 * var(--vwu));
+    line-height: 1.35;
+    min-width: 0;
+  }
+
+  .bb-head > span {
+    font-size: calc(0.85 * var(--vwu));
+    font-weight: 700;
+    color: var(--sigma-slate);
+  }
+
+  .bb-num {
+    flex: none;
+    width: calc(2.2 * var(--vwu));
+    text-align: center;
+    border-right: 1px solid var(--sigma-line);
+    background: var(--sigma-surface);
+    color: var(--sigma-slate);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bb-theme {
+    flex: 0 0 13%;
+    font-weight: 700;
+    color: var(--sigma-ink);
+  }
+
+  .bb-q {
+    flex: 0 0 32%;
+    color: var(--sigma-ink);
+  }
+
+  /* The two anchors read as a pair, so they get a shared left rule. */
+  .bb-a {
+    flex: 1 1 0;
+    color: var(--sigma-slate);
+    border-left: 1px solid var(--sigma-line);
+  }
+
   /* ---- Matrix: what each kind of work used to take, and what it takes now.
      Columns are anchored by a ruled header; each one carries a chevron down
      into the "now" row, which is solid blue and slightly lifted so the shift
@@ -2755,6 +2857,14 @@
       </div>
     </section>
 
+    <section class="slide slide-buildbuy" data-index="buildbuy">
+      <div class="bb-wrap">
+        <div class="bb-bubble"></div>
+        <p class="bb-lead"></p>
+        <div class="bb-table"></div>
+      </div>
+    </section>
+
     <section class="slide slide-matrix" data-index="matrix">
       <div class="matrix">
         <div class="mx-corner"></div>
@@ -3025,6 +3135,64 @@
           q.classList.toggle('past', i < stage);
         });
       }
+
+      // Seven questions that point at build or buy. Kept as data so the
+      // wording stays easy to edit; rendered once on load since the slide has
+      // no build of its own.
+      const BUILD_BUY = {
+        prompt: 'Should we build this or buy it?',
+        lead: 'Seven questions. Score each one from 1 to 4.',
+        columns: ['Theme', 'Question', '1', '4'],
+        rows: [
+          ['Fleet', 'How many of these will exist in three years, and who runs them?',
+            'First of many, nobody owns the fleet',
+            'One bounded thing, a platform team owns it'],
+          ['Change', 'When the business rule changes, who changes the logic?',
+            'The rule owner files a ticket against engineering',
+            'The rule owner ships it themselves'],
+          ['Survival', 'If the person who built it leaves, who picks it up?',
+            "Nobody, we'd figure it out then",
+            'Named owner, a team already maintains it'],
+          ['Definition', 'Does it produce a number quoted outside the team, and where does that definition live?',
+            'Yes, and the definition lives in the app',
+            'No shared metrics, or the definition lives in a model we govern'],
+          ['Cost', "Can you attribute this workload's warehouse spend to a team today?",
+            'No, and nobody would notice it triple',
+            'Yes, attributed and monitored now'],
+          ['Differentiator', 'Would a customer pay you for the thing itself?',
+            'Internal workflow, nobody outside would pay',
+            "It's a product differentiator"],
+          ['Data movement', 'Does buying force a copy or extract of your data?',
+            'No, it runs on our warehouse',
+            'Yes, buying means moving data']
+        ]
+      };
+
+      const buildBuySlide = document.querySelector('.slide-buildbuy');
+
+      (function renderBuildBuy() {
+        const cellClasses = ['bb-theme', 'bb-q', 'bb-a', 'bb-a'];
+        buildBuySlide.querySelector('.bb-bubble').textContent = BUILD_BUY.prompt;
+        buildBuySlide.querySelector('.bb-lead').textContent = BUILD_BUY.lead;
+        const table = buildBuySlide.querySelector('.bb-table');
+        const row = (cells, cls, gutter) => {
+          const el = document.createElement('div');
+          el.className = cls;
+          const num = document.createElement('span');
+          num.className = 'bb-num';
+          num.textContent = gutter;
+          el.appendChild(num);
+          cells.forEach((text, i) => {
+            const cell = document.createElement('span');
+            cell.className = cellClasses[i];
+            cell.textContent = text;
+            el.appendChild(cell);
+          });
+          table.appendChild(el);
+        };
+        row(BUILD_BUY.columns, 'bb-head', '');
+        BUILD_BUY.rows.forEach((cells, i) => row(cells, 'bb-row', String(i + 1)));
+      })();
 
       // Stage 0 holds the before row, 1 brings down the now row. The red ring
       // is named per step rather than accumulated, so the table can come back
@@ -3336,6 +3504,7 @@
           .map((label, videoIndex) => ({
             slide: chatSlide, kind: 'overlay', overlay: 'video', section: 'futureapps',
             videoIndex, requiredFrame: 1, label })),
+        { slide: buildBuySlide, label: 'Build or buy' },
         // The table returns clean, then the ring moves to automation.
         { slide: matrixSlide, focus: 1, label: 'Table — back again' },
         { slide: matrixSlide, focus: 1, ring: 'agents', label: 'Table — Agents' },
