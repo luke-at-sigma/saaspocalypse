@@ -978,6 +978,22 @@
     right: calc(1.6 * var(--vwu));
   }
 
+  /* Arrow keys drive the deck, so once a control has been clicked Chrome
+     starts treating it as keyboard-focused and paints a focus ring over the
+     slide on every subsequent key press. */
+  .slide-nav-btn:focus,
+  .slide-nav-btn:focus-visible,
+  .slide-nav-close:focus,
+  .slide-nav-close:focus-visible,
+  .slide-nav-tile:focus,
+  .slide-nav-tile:focus-visible,
+  .feud-x-btn:focus,
+  .feud-x-btn:focus-visible,
+  .feud-reset:focus,
+  .feud-reset:focus-visible {
+    outline: none;
+  }
+
   .slide-nav-btn:hover {
     border-color: var(--sigma-blue);
     color: var(--sigma-blue);
@@ -4998,6 +5014,13 @@
       function closeSlideNav() {
         slideNavOverlay.classList.remove('visible');
       }
+
+      // Belt and braces with the focus-ring rule above: drop focus after a
+      // click so nothing is left in a focused state at all.
+      document.addEventListener('click', () => {
+        const el = document.activeElement;
+        if (el && el !== document.body && typeof el.blur === 'function') el.blur();
+      });
 
       slideNavBtn.addEventListener('click', openSlideNav);
       slideNavClose.addEventListener('click', closeSlideNav);
