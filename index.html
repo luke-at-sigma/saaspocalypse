@@ -977,8 +977,11 @@
      sitting at the generic corner inset. Everywhere else the corner inset is
      what's wanted. */
   body:has(.slide-chat.active) .slide-nav-btn {
-    top: calc(0.7 * var(--vwu));
-    right: calc(1.6 * var(--vwu));
+    /* Card inset, its border, then centred in what's left of the bar. The
+       offsets are composed rather than flattened so they stay right if the
+       card's inset changes. */
+    top: calc(0.9 * var(--vwu) + 1px + (3 * var(--vwu) - 1.6 * var(--vwu)) / 2);
+    right: calc(0.9 * var(--vwu) + 1px + 1.6 * var(--vwu));
   }
 
   /* Arrow keys drive the deck, so once a control has been clicked Chrome
