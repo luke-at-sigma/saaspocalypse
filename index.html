@@ -2602,13 +2602,21 @@
          the audience up. -->
     <section class="slide slide-takeaways" data-index="takeaways">
       <div class="hands-stack">
-        <p class="hands-q"><span class="hands-num">1</span><span>The line between a dashboard, an app and an agent is gone</span></p>
-        <p class="hands-q"><span class="hands-num">2</span><span>Generating it is cheap. Running it is the bill you keep paying</span></p>
-        <p class="hands-q"><span class="hands-num">3</span><span>Put governance underneath, or your experts end up back in the IT queue</span></p>
+        <p class="hands-q"><span class="hands-num">1</span><span>The people closest to the work are already building the software, and they are not asking first</span></p>
+        <p class="hands-q"><span class="hands-num">2</span><span>Generating the app takes an afternoon; running it in production is a cost your team carries every day after</span></p>
+        <p class="hands-q"><span class="hands-num">3</span><span>If the runtime is governed before they start, your experts never end up back in the IT queue</span></p>
       </div>
     </section>
 
-    <section class="slide slide-field slide-divider" data-index="appendix">
+    <section class="slide slide-field slide-divider slide-thanks" data-index="thanks">
+      <div class="field-glow"><span class="glow-a"></span><span class="glow-b"></span></div>
+      <div class="field-grid"></div>
+      <div class="field-card">
+        <h2>Thank you</h2>
+      </div>
+    </section>
+
+    <section class="slide slide-field slide-divider slide-appendix" data-index="appendix">
       <div class="field-glow"><span class="glow-a"></span><span class="glow-b"></span></div>
       <div class="field-grid"></div>
       <div class="field-card">
@@ -2878,7 +2886,8 @@
       const matrixSlide = document.querySelector('.slide-matrix');
       const icebergSlide = document.querySelector('.slide-iceberg');
       const takeawaysSlide = document.querySelector('.slide-takeaways');
-      const dividerSlide = document.querySelector('.slide-divider');
+      const thanksSlide = document.querySelector('.slide-thanks');
+      const appendixSlide = document.querySelector('.slide-appendix');
 
       // One line per click. Everything so far stays on screen; only the newest
       // holds full contrast. Shared by the show of hands and the takeaways.
@@ -3216,9 +3225,10 @@
           .map((label, build) => ({ slide: chatSlide, kind: 'overlay', overlay: 'diagram',
             section: 'framework', requiredFrame: 2, focus: build, label: 'The point — ' + label })),
 
-        ...['Dashboards, apps and agents', 'The bill you keep paying', 'Governance underneath']
+        ...['They are already building', 'The standing cost', 'Govern the runtime']
           .map((label, focus) => ({ slide: takeawaysSlide, focus, label: 'Takeaway — ' + label })),
-        { slide: dividerSlide, label: 'Appendix' },
+        { slide: thanksSlide, label: 'Thank you' },
+        { slide: appendixSlide, label: 'Appendix' },
         { slide: feudSlide, label: 'Top 5: Executive minds' },
         { slide: chatSlide, kind: 'frame', frameIndex: 2, requiredFrame: 2, label: "What's the point of data" },
         { slide: chatSlide, kind: 'frame', frameIndex: 2, requiredFrame: 2, pick: 3, label: 'The real answer' },
