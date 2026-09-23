@@ -969,6 +969,15 @@
     transition: color 0.15s ease, border-color 0.15s ease;
   }
 
+  /* On the product slide the pill shares a row with the app's own top bar, so
+     it centres on that bar and picks up the bar's right padding rather than
+     sitting at the generic corner inset. Everywhere else the corner inset is
+     what's wanted. */
+  body:has(.slide-chat.active) .slide-nav-btn {
+    top: calc(0.7 * var(--vwu));
+    right: calc(1.6 * var(--vwu));
+  }
+
   .slide-nav-btn:hover {
     border-color: var(--sigma-blue);
     color: var(--sigma-blue);
