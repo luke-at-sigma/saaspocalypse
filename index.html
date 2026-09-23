@@ -1,0 +1,4997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Luke Stanke</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..800&family=Lato:wght@300;400;700;900&display=swap');
+
+  /* Advercase Regular only — the brand carries heading hierarchy through size,
+     never weight, and never sets it in all-caps. */
+  @font-face {
+    font-family: "Advercase";
+    src: url("assets/fonts/advercase-regular.woff2") format("woff2"),
+         url("assets/fonts/advercase-regular.woff") format("woff");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  /* Design tokens pulled from Sigma's in-product design system (not the marketing
+     brand kit) — primary accent, radii, and shadow language match app.sigmacomputing. */
+  :root {
+    /* Two typefaces, split by what the viewer is looking at: DM Sans is the
+       deck's own voice, Lato is the product's. Anything that reads as the
+       Sigma AI experience — chrome or conversation — uses the product face. */
+    --font-canvas: "DM Sans", system-ui, -apple-system, sans-serif;
+    /* Advercase's @font-face is still below: point this back at it once the
+       brand asset renders as the geometric sans and not a serif. */
+    --font-display: "DM Sans", system-ui, -apple-system, sans-serif;
+    --font-product: "Lato", system-ui, -apple-system, sans-serif;
+
+    /* The deck's layout unit — what `1vw` used to mean. Keyed to whichever
+       axis is tighter, so type holds its size when the window gets wider than
+       16:9 but still shrinks to fit a window that's narrower. */
+    --vwu: min(1vw, 1.7778vh);
+
+    /* Canvas default: Sigma's marketing brand palette. Cobalt is the sole
+       accent — the old teal is retired. The simulated product UI overrides
+       these below with the in-product values, which are deliberately different. */
+    --sigma-blue: #1A70F1;
+    --sigma-blue-hover: #1660D6;
+    --sigma-blue-press: #08377E;
+    --sigma-blue-deep: #0A2E70;
+    --sigma-blue-tint: #EEF3FF;
+    --sigma-blue-tint-2: #DCE6FE;
+    --sigma-ink: #111114;
+    --sigma-slate: #5F5F66;
+    --sigma-line: #E5E5E9;
+    --sigma-surface: #F7F7F8;
+    --sigma-paper: #F4F5F7;
+    --sigma-radius: calc(0.5 * var(--vwu));
+    --sigma-shadow: 0 calc(0.15 * var(--vwu)) calc(0.5 * var(--vwu)) rgba(0, 0, 0, 0.09), 0 calc(0.35 * var(--vwu)) calc(0.9 * var(--vwu)) rgba(0, 0, 0, 0.05);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #111;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-canvas);
+  }
+
+  .slide-container {
+    /* Width is free-form — always edge to edge, so there's never a pillarbox.
+       Height stays tied to --vwu so the slide keeps the proportions it was
+       drawn at; widening the window gives the content more room rather than
+       scaling or stretching it. */
+    width: 100vw;
+    height: calc(56.25 * var(--vwu));
+    margin: auto;
+    overflow: hidden;
+    position: relative;
+    background: #fff;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+
+  .slide.active {
+    display: block;
+  }
+
+  /* ---- Slide 1: title ---- */
+
+  /* ---- Blue field: a light grid over two blurred blobs that drift at
+     different periods, so the glow never settles into a loop you can watch
+     repeat. Shared by the title slide and the statement slide. ---- */
+  .slide-field.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(150deg,
+      color-mix(in srgb, var(--sigma-blue) 80%, #fff) 0%,
+      var(--sigma-blue) 52%,
+      var(--sigma-blue-hover) 100%);
+  }
+
+  .field-glow {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .field-glow span {
+    position: absolute;
+    width: 62%;
+    height: 130%;
+    border-radius: 50%;
+    filter: blur(calc(3.5 * var(--vwu)));
+  }
+
+  .glow-a {
+    left: 4%;
+    top: -34%;
+    background: radial-gradient(closest-side,
+      color-mix(in srgb, var(--sigma-blue) 16%, #fff) 0%,
+      rgba(255, 255, 255, 0) 100%);
+    animation: glowDriftA 13s ease-in-out infinite alternate;
+  }
+
+  .glow-b {
+    right: 0%;
+    bottom: -38%;
+    background: radial-gradient(closest-side, var(--sigma-blue-press) 0%, rgba(8, 55, 126, 0) 100%);
+    animation: glowDriftB 19s ease-in-out infinite alternate;
+  }
+
+  @keyframes glowDriftA {
+    from { transform: translate3d(0, 0, 0) scale(1); opacity: 0.38; }
+    to   { transform: translate3d(22%, 14%, 0) scale(1.22); opacity: 0.6; }
+  }
+
+  @keyframes glowDriftB {
+    from { transform: translate3d(0, 0, 0) scale(1.1); opacity: 0.5; }
+    to   { transform: translate3d(-26%, -18%, 0) scale(0.9); opacity: 0.28; }
+  }
+
+  /* Masked so the rules fade out before they reach the slide edge. */
+  .field-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+    background-size: calc(3.4 * var(--vwu)) calc(3.4 * var(--vwu));
+    -webkit-mask-image: radial-gradient(78% 72% at 50% 50%, #000 38%, transparent 100%);
+    mask-image: radial-gradient(78% 72% at 50% 50%, #000 38%, transparent 100%);
+  }
+
+  .field-card {
+    position: relative;
+    width: 62%;
+    padding: calc(4.4 * var(--vwu)) calc(4.6 * var(--vwu));
+    border-radius: calc(1.4 * var(--vwu));
+    background: #fff;
+    box-shadow: 0 calc(1.3 * var(--vwu)) calc(3.6 * var(--vwu)) rgba(4, 30, 88, 0.3);
+    text-align: center;
+  }
+
+  .slide-field.active .field-card {
+    animation: fieldCardIn 0.5s cubic-bezier(0.22, 1, 0.3, 1);
+  }
+
+  @keyframes fieldCardIn {
+    from { opacity: 0; transform: translateY(calc(1.2 * var(--vwu))) scale(0.985); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .slide-statement .field-card p {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: calc(3.2 * var(--vwu));
+    line-height: 1.14;
+    letter-spacing: 0.012em;
+    color: var(--sigma-ink);
+  }
+
+  /* ---- Iceberg: what a generated dashboard actually costs to run. The
+     waterline splits the slide — demo above it, runtime below — and the
+     third, darker band at the bottom is where the recurring cost lives.
+     Background and berg are one SVG on a 16:9 viewBox, so `none` scaling
+     can't distort it; the copy sits over the top as HTML. ---- */
+  .slide-iceberg.active {
+    display: block;
+    background: #fff;
+    font-family: var(--font-canvas);
+    overflow: hidden;
+  }
+
+  .ice-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ice-water { fill: url(#iceWater); }
+  .ice-stop-top { stop-color: color-mix(in srgb, var(--sigma-blue) 88%, #fff); }
+  .ice-stop-mid { stop-color: var(--sigma-blue); }
+  .ice-stop-deep { stop-color: var(--sigma-blue-deep); }
+
+  .ice-surface {
+    fill: none;
+    stroke: #fff;
+    stroke-opacity: 0.55;
+    stroke-width: 2.6;
+  }
+
+  /* One period of drift, so the loop point is invisible. The clip paths run
+     the same animation — a clipPath's contents animate, and the clip region
+     follows — which is what keeps the cut on the ice glued to the swell. */
+  .ice-wave,
+  .ice-clip { animation: iceDrift 11s linear infinite; }
+
+  @keyframes iceDrift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-250px); }
+  }
+
+  /* Custom properties, so one shape can be painted two ways through <use>. */
+  .ice-body { fill: var(--ice-body); }
+  .ice-body-shade { fill: var(--ice-shade); }
+  .ice-above { --ice-body: #fff; --ice-shade: #EAF1FE; }
+  .ice-below { --ice-body: #EFF4FE; --ice-shade: #DCE7FA; }
+
+  .ice-facet {
+    fill: none;
+    stroke: #BFD2F0;
+    stroke-width: 1.5;
+  }
+
+  /* First beat holds the submerged mass back — with the water opaque, that
+     reads exactly like a berg sitting behind it — then it surfaces. */
+  .ice-deep {
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .slide-iceberg.show-depth .ice-deep { opacity: 1; }
+
+  .ice-reveal {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    transition-delay: calc(var(--i, 0) * 0.12s);
+  }
+
+  .slide-iceberg.show-depth .ice-reveal { opacity: 1; }
+
+  /* The silhouette needs its own stroke or the white tip disappears into the
+     white half of the slide. */
+  .ice-edge {
+    fill: none;
+    stroke: #A8C1E8;
+    stroke-width: 2.2;
+    stroke-linejoin: round;
+  }
+
+  .ice-leader {
+    fill: none;
+    stroke: var(--sigma-blue-press);
+    stroke-width: 2.4;
+  }
+
+  .slide-iceberg > *:not(.ice-bg) { position: absolute; }
+
+  .ice-head { top: 6%; left: 5%; }
+
+  .ice-head h2 {
+    margin: 0;
+    font-size: calc(3.1 * var(--vwu));
+    font-weight: 700;
+    letter-spacing: 0.012em;
+    line-height: 1.08;
+    color: var(--sigma-ink);
+  }
+
+  .ice-head p {
+    margin: calc(0.9 * var(--vwu)) 0 0;
+    font-size: calc(1.35 * var(--vwu));
+    font-weight: 500;
+    color: var(--sigma-slate);
+  }
+
+  /* The two prices straddle the waterline: what you pay to build it sits in
+     the air, what you pay to run it sits in the water. */
+  .ice-cost { right: 5%; text-align: right; }
+  .ice-cost-top { bottom: 68.5%; }
+  .ice-cost-bottom { top: 35.5%; }
+
+  .ice-dollars {
+    display: block;
+    font-size: calc(3 * var(--vwu));
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    color: var(--sigma-ink);
+  }
+
+  .ice-cost-bottom .ice-dollars { color: #fff; }
+
+  .ice-cost-note {
+    display: block;
+    margin-top: calc(0.5 * var(--vwu));
+    font-size: calc(0.95 * var(--vwu));
+    font-weight: 500;
+    color: var(--sigma-slate);
+  }
+
+  .ice-cost-bottom .ice-cost-note { color: rgba(255, 255, 255, 0.72); }
+
+  .ice-label {
+    left: 5%;
+    max-width: calc(17 * var(--vwu));
+    font-size: calc(1.1 * var(--vwu));
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.35;
+  }
+
+  .ice-label-above { top: 26.5%; color: var(--sigma-slate); }
+  .ice-label-below { top: 36.5%; color: rgba(255, 255, 255, 0.82); }
+
+  /* Centred on the leader line at y=136 of the 562.5 viewBox, so the rule
+     meets the text rather than running under it. */
+  .ice-callout {
+    left: 41.8%;
+    top: 24.18%;
+    transform: translateY(-50%);
+    font-size: calc(1.55 * var(--vwu));
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: var(--sigma-ink);
+  }
+
+  .ice-runtime {
+    left: 45%;
+    top: 47%;
+    width: 51%;
+  }
+
+  .ice-runtime-title {
+    padding-bottom: calc(0.8 * var(--vwu));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.32);
+    font-size: calc(1.12 * var(--vwu));
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  .ice-cols {
+    margin-top: calc(1.5 * var(--vwu));
+    display: grid;
+    grid-template-columns: 1fr 1.12fr 1fr;
+    gap: calc(1.6 * var(--vwu));
+  }
+
+  .ice-cols h4 {
+    margin: 0 0 calc(1 * var(--vwu));
+    font-size: calc(0.92 * var(--vwu));
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.66);
+  }
+
+  .ice-cols ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.85 * var(--vwu));
+  }
+
+  .ice-cols li {
+    position: relative;
+    padding-left: calc(1.5 * var(--vwu));
+    font-size: calc(1.2 * var(--vwu));
+    font-weight: 500;
+    line-height: 1.3;
+    color: #fff;
+  }
+
+  .ice-cols li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.42em;
+    width: calc(0.52 * var(--vwu));
+    height: calc(0.52 * var(--vwu));
+    border-radius: calc(0.1 * var(--vwu));
+    background: rgba(255, 255, 255, 0.85);
+  }
+
+  /* Retired with the regeneration-tax block. Kept so it can come back. */
+  .ice-tax { left: 5%; top: 80%; }
+
+  .ice-tax-eyebrow {
+    font-size: calc(1.12 * var(--vwu));
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--sigma-blue) 55%, #fff);
+  }
+
+  .ice-tax-line {
+    margin-top: calc(0.7 * var(--vwu));
+    font-size: calc(2.1 * var(--vwu));
+    font-weight: 700;
+    letter-spacing: 0.012em;
+    color: #fff;
+  }
+
+  .ice-tax-note {
+    margin-top: calc(0.5 * var(--vwu));
+    font-size: calc(1.1 * var(--vwu));
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  /* ---- Matrix: what each kind of work used to take, and what it takes now.
+     Columns are anchored by a ruled header; each one carries a chevron down
+     into the "now" row, which is solid blue and slightly lifted so the shift
+     reads before anyone starts on the individual cells. ---- */
+  .slide-matrix.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sigma-surface);
+  }
+
+  .matrix {
+    width: 86%;
+    display: grid;
+    grid-template-columns: calc(11 * var(--vwu)) repeat(4, 1fr);
+    column-gap: calc(1.1 * var(--vwu));
+    row-gap: calc(0.8 * var(--vwu));
+    font-family: var(--font-canvas);
+  }
+
+  /* The rule is what makes a column read as a column. */
+  .mx-head {
+    align-self: end;
+    padding: 0 calc(0.2 * var(--vwu)) calc(0.7 * var(--vwu));
+    border-bottom: 2px solid var(--sigma-line);
+    font-size: calc(1.02 * var(--vwu));
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--sigma-slate);
+  }
+
+  .mx-row-label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: calc(1.3 * var(--vwu));
+    text-align: right;
+    font-size: calc(1.75 * var(--vwu));
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .mx-row-label.mx-before { color: var(--sigma-slate); }
+  .mx-row-label.mx-now { color: var(--sigma-blue); }
+
+  .mx-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: calc(10.5 * var(--vwu));
+    padding: calc(1.6 * var(--vwu)) calc(1.7 * var(--vwu));
+    border: 1px solid var(--sigma-line);
+    border-radius: calc(0.8 * var(--vwu));
+    background: #fff;
+    font-size: calc(1.6 * var(--vwu));
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--sigma-slate);
+  }
+
+  /* The live row: blue, heavier, and lifted off the board. */
+  .mx-cell.now {
+    border-color: var(--sigma-blue);
+    background: var(--sigma-blue);
+    color: #fff;
+    font-weight: 700;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 calc(0.5 * var(--vwu)) calc(1.5 * var(--vwu)) rgba(26, 112, 241, 0.26);
+  }
+
+  .mx-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(0.15 * var(--vwu)) 0;
+    color: var(--sigma-blue);
+  }
+
+  .mx-arrow svg {
+    width: calc(2.2 * var(--vwu));
+    height: calc(2.2 * var(--vwu));
+  }
+
+  /* One answer under two columns: the line between a repeatable dashboard
+     and an application is the thing that went away. */
+  .mx-cell.mx-span {
+    grid-column: span 2;
+    /* Centred, because it answers both columns rather than sitting under
+       either one of them. */
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Later beats ring the "now" cells one at a time. A pseudo-element rather
+     than `outline`, so it can fade in without touching the cell's own shadow
+     or the grid's geometry. */
+  .mx-cell[data-ring]::after {
+    content: '';
+    position: absolute;
+    /* Sits inside the column gap without crowding the cells either side. */
+    inset: calc(-0.32 * var(--vwu));
+    border: calc(0.24 * var(--vwu)) solid #D1344B;
+    border-radius: calc(1.12 * var(--vwu));
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+
+  .mx-cell.ringed::after {
+    opacity: 1;
+  }
+
+  /* Assembles column by column, so the four kinds of work land in order and
+     each chevron follows its own pair of cells. */
+  @keyframes mxIn {
+    from { opacity: 0; transform: translateY(calc(0.8 * var(--vwu))); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .slide-matrix.active .mx-head,
+  .slide-matrix.active .mx-cell:not(.now),
+  .slide-matrix.active .mx-row-label.mx-before {
+    animation: mxIn 0.5s cubic-bezier(0.22, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--i, 0) * 0.07s);
+  }
+
+  /* The second beat: chevrons and the blue row arrive together, column by
+     column, so the shift plays rather than just appearing. */
+  .mx-arrow,
+  .mx-cell.now,
+  .mx-row-label.mx-now {
+    opacity: 0;
+    transform: translateY(calc(0.8 * var(--vwu)));
+    transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.3, 1);
+    transition-delay: calc(var(--i, 0) * 0.07s);
+  }
+
+  .slide-matrix.show-now .mx-arrow,
+  .slide-matrix.show-now .mx-cell.now,
+  .slide-matrix.show-now .mx-row-label.mx-now {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ---- Show of hands: three escalating questions, one per click. The one
+     just asked holds the ink; the ones already answered drop back to slate so
+     the funnel is visible without the earlier lines competing. ---- */
+  .slide-hands.active,
+  .slide-takeaways.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sigma-surface);
+  }
+
+  .hands-stack {
+    width: 78%;
+    display: flex;
+    flex-direction: column;
+    gap: calc(3 * var(--vwu));
+  }
+
+  .hands-q {
+    margin: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: calc(1.6 * var(--vwu));
+    font-family: var(--font-canvas);
+    font-size: calc(2.6 * var(--vwu));
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--sigma-ink);
+    opacity: 0;
+    transform: translateY(calc(0.9 * var(--vwu)));
+    transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.3, 1),
+                color 0.4s ease;
+  }
+
+  .hands-q.shown {
+    opacity: 1;
+    transform: none;
+  }
+
+  .hands-q.past {
+    color: var(--sigma-slate);
+  }
+
+  .hands-num {
+    flex: none;
+    margin-top: calc(0.35 * var(--vwu));
+    width: calc(3.4 * var(--vwu));
+    height: calc(3.4 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-blue);
+    color: #fff;
+    font-size: calc(1.5 * var(--vwu));
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.4s ease, color 0.4s ease;
+  }
+
+  .hands-q.past .hands-num {
+    background: var(--sigma-blue-tint-2);
+    color: var(--sigma-blue);
+  }
+
+  /* ---- Divider: the title slide's field with a single word on it. ---- */
+  .slide-divider .field-card {
+    width: 42%;
+  }
+
+  .slide-divider h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: calc(3.5 * var(--vwu));
+    line-height: 1.08;
+    letter-spacing: 0.012em;
+    color: var(--sigma-ink);
+  }
+
+  /* ---- Family Feud board. Mouse-driven, not arrow-driven: the reveal order
+     depends on what the audience shouts out, so each slot and the strike
+     button are their own click targets. Slots are recessed wells on a lit
+     board — the inset highlights are what stop it reading as flat rectangles. ---- */
+  .slide-feud.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(2.4 * var(--vwu));
+    background: radial-gradient(62% 56% at 50% 46%, #FFFFFF 0%, var(--sigma-surface) 72%);
+  }
+
+  .feud-board {
+    position: relative;
+    width: 76%;
+    padding: calc(2.2 * var(--vwu)) calc(2.4 * var(--vwu)) calc(2.5 * var(--vwu));
+    border-radius: calc(1.3 * var(--vwu));
+    background:
+      radial-gradient(125% 85% at 50% -12%, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0) 62%),
+      linear-gradient(168deg, var(--sigma-blue) 0%, var(--sigma-blue-press) 54%, var(--sigma-blue-deep) 100%);
+    box-shadow:
+      0 calc(1.1 * var(--vwu)) calc(2.8 * var(--vwu)) rgba(4, 30, 88, 0.32),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.17);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .feud-title {
+    margin: 0 0 calc(1.6 * var(--vwu));
+    padding-bottom: calc(1.2 * var(--vwu));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.20);
+    text-align: center;
+    color: #fff;
+    font-size: calc(1.62 * var(--vwu));
+    font-weight: 700;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+  }
+
+  .feud-slots {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: calc(1.05 * var(--vwu));
+  }
+
+  .feud-slot {
+    list-style: none;
+    height: calc(5.6 * var(--vwu));
+    perspective: calc(80 * var(--vwu));
+    cursor: pointer;
+  }
+
+  .feud-flip {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.35, 0, 0.2, 1);
+  }
+
+  .feud-slot.revealed .feud-flip { transform: rotateX(180deg); }
+
+  .feud-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    backface-visibility: hidden;
+    border-radius: calc(0.75 * var(--vwu));
+  }
+
+  .feud-front {
+    justify-content: center;
+    background: linear-gradient(var(--sigma-blue-press), var(--sigma-blue-deep));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.20),
+      inset 0 calc(-0.14 * var(--vwu)) 0 rgba(0, 0, 0, 0.32),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+    transition: background 0.18s ease;
+  }
+
+  .feud-slot:hover .feud-front { background: linear-gradient(var(--sigma-blue-hover), var(--sigma-blue-press)); }
+
+  .feud-front span {
+    color: #fff;
+    font-size: calc(2.5 * var(--vwu));
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 calc(0.12 * var(--vwu)) calc(0.32 * var(--vwu)) rgba(0, 0, 0, 0.38);
+  }
+
+  .feud-back {
+    transform: rotateX(180deg);
+    gap: calc(1.2 * var(--vwu));
+    padding: 0 calc(1.5 * var(--vwu));
+    background: #fff;
+    box-shadow: inset 0 0 0 1px rgba(4, 30, 88, 0.10);
+  }
+
+  .feud-rank {
+    flex: none;
+    width: calc(2.5 * var(--vwu));
+    height: calc(2.5 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-blue);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(1.15 * var(--vwu));
+    font-weight: 700;
+  }
+
+  .feud-answer {
+    flex: none;
+    color: var(--sigma-ink);
+    font-size: calc(1.55 * var(--vwu));
+    font-weight: 700;
+  }
+
+  /* Leader rule out to the edge — echoes the label rules in the loop diagram
+     and stops short answers leaving the row looking unfinished. */
+  .feud-leader {
+    flex: 1;
+    border-bottom: 2px dotted var(--sigma-line);
+  }
+
+  .feud-strikes {
+    display: flex;
+    align-items: center;
+    gap: calc(1.1 * var(--vwu));
+  }
+
+  .feud-strikes-label {
+    font-size: calc(0.78 * var(--vwu));
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--sigma-slate);
+  }
+
+  .feud-x-btn {
+    width: calc(3.7 * var(--vwu));
+    height: calc(3.7 * var(--vwu));
+    border-radius: calc(0.9 * var(--vwu));
+    border: none;
+    background: #D1344B;
+    color: #fff;
+    font-size: calc(1.85 * var(--vwu));
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 calc(0.3 * var(--vwu)) calc(0.9 * var(--vwu)) rgba(160, 20, 40, 0.34);
+  }
+
+  .feud-x-btn:hover { background: #B82A40; }
+
+  .feud-x-row { display: flex; gap: calc(0.6 * var(--vwu)); }
+
+  .feud-x {
+    width: calc(2.6 * var(--vwu));
+    height: calc(2.6 * var(--vwu));
+    border-radius: calc(0.6 * var(--vwu));
+    border: 2px solid var(--sigma-line);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(1.45 * var(--vwu));
+    font-weight: 700;
+    color: transparent;
+  }
+
+  .feud-x.on { border-color: #D1344B; background: #FDF1F3; color: #D1344B; }
+
+  .feud-reset {
+    border: none;
+    background: none;
+    color: var(--sigma-slate);
+    font-family: inherit;
+    font-size: calc(0.85 * var(--vwu));
+    cursor: pointer;
+    visibility: hidden;
+  }
+
+  .feud-strikes.used .feud-reset { visibility: visible; }
+
+  /* Board assembles on arrival: the panel settles, then the rows drop in. */
+  .slide-feud.active .feud-board { animation: feudSettle 0.45s cubic-bezier(0.22, 1, 0.3, 1); }
+  .slide-feud.active .feud-slot { animation: feudDrop 0.44s cubic-bezier(0.22, 1, 0.3, 1) backwards; }
+  .slide-feud.active .feud-slot:nth-child(1) { animation-delay: 0.10s; }
+  .slide-feud.active .feud-slot:nth-child(2) { animation-delay: 0.16s; }
+  .slide-feud.active .feud-slot:nth-child(3) { animation-delay: 0.22s; }
+  .slide-feud.active .feud-slot:nth-child(4) { animation-delay: 0.28s; }
+  .slide-feud.active .feud-slot:nth-child(5) { animation-delay: 0.34s; }
+
+  @keyframes feudSettle {
+    from { opacity: 0; transform: translateY(calc(0.7 * var(--vwu))) scale(0.985); }
+  }
+
+  @keyframes feudDrop {
+    from { opacity: 0; transform: translateY(calc(-0.8 * var(--vwu))); }
+  }
+
+  /* The signature beat — a big X slammed over the board, then gone. */
+  .feud-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    color: #FF3B54;
+    font-size: calc(17 * var(--vwu));
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .feud-flash.show { display: flex; animation: feudFlash 0.85s ease-out; }
+
+  @keyframes feudFlash {
+    0%   { opacity: 0; transform: scale(0.45); }
+    22%  { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.15); }
+  }
+
+  .slide-title .field-card {
+    width: 70%;
+  }
+
+  .slide-title .logo {
+    display: block;
+    height: calc(3.6 * var(--vwu));
+    width: auto;
+    margin: 0 auto calc(2.3 * var(--vwu));
+  }
+
+  .slide-title .headline-wrap {
+    text-align: center;
+  }
+
+  .slide-title h1 .line {
+    display: block;
+  }
+
+  /* Real weight rather than the outline trick the display face needed. */
+  .slide-title h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: calc(3.5 * var(--vwu));
+    line-height: 1.08;
+    letter-spacing: 0.012em;
+    color: var(--sigma-ink);
+    margin: 0;
+  }
+
+  .slide-title .subtitle {
+    font-family: var(--font-canvas);
+    font-weight: 500;
+    font-size: calc(1.6 * var(--vwu));
+    letter-spacing: 0.012em;
+    color: var(--sigma-slate);
+    margin: calc(1.2 * var(--vwu)) 0 0;
+  }
+
+  /* ---- Nav (outside slide-container, letterbox area) ---- */
+  .nav-hint {
+    position: fixed;
+    bottom: 2vh;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #8C8C8C;
+    font-family: var(--font-canvas);
+    font-size: calc(0.85 * var(--vwu));
+    letter-spacing: 0.02em;
+    pointer-events: none;
+  }
+
+  /* Icon and counter live in one pill, anchored to the slide's own corner
+     rather than the window's — pinned to the viewport it drifted up into the
+     browser's chrome whenever the slide was letterboxed. */
+  .slide-nav-btn {
+    position: absolute;
+    top: calc(1.1 * var(--vwu));
+    right: calc(1.1 * var(--vwu));
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: calc(0.45 * var(--vwu));
+    height: calc(1.6 * var(--vwu));
+    padding: 0 calc(0.62 * var(--vwu));
+    border: 1px solid var(--sigma-line);
+    border-radius: calc(0.8 * var(--vwu));
+    background: #fff;
+    color: var(--sigma-slate);
+    font-family: var(--font-canvas);
+    font-size: calc(0.78 * var(--vwu));
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .slide-nav-btn:hover {
+    border-color: var(--sigma-blue);
+    color: var(--sigma-blue);
+  }
+
+  .slide-nav-btn svg {
+    width: calc(0.85 * var(--vwu));
+    height: calc(0.85 * var(--vwu));
+  }
+
+  .progress {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- Slide-jump overlay: grid of every nav step, click to skip to it ---- */
+  .slide-nav-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 17, 17, 0.72);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .slide-nav-overlay.visible {
+    display: flex;
+  }
+
+  .slide-nav-panel {
+    background: #fff;
+    border-radius: calc(0.6 * var(--vwu));
+    padding: calc(1.6 * var(--vwu));
+    width: calc(72 * var(--vwu));
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 calc(1 * var(--vwu)) calc(3 * var(--vwu)) rgba(0, 0, 0, 0.3);
+  }
+
+  .slide-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: calc(1.2 * var(--vwu));
+    font-family: var(--font-canvas);
+  }
+
+  .slide-nav-header span {
+    font-weight: 700;
+    font-size: calc(1.2 * var(--vwu));
+    color: var(--sigma-ink);
+  }
+
+  .slide-nav-close {
+    width: calc(1.8 * var(--vwu));
+    height: calc(1.8 * var(--vwu));
+    border-radius: 50%;
+    border: none;
+    background: var(--sigma-surface);
+    color: var(--sigma-slate);
+    font-size: calc(1.1 * var(--vwu));
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .slide-nav-close:hover {
+    background: var(--sigma-line);
+  }
+
+  .slide-nav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(calc(10 * var(--vwu)), 1fr));
+    gap: calc(0.8 * var(--vwu));
+  }
+
+  .slide-nav-tile {
+    border: 1px solid var(--sigma-line);
+    border-radius: calc(0.4 * var(--vwu));
+    padding: calc(0.8 * var(--vwu)) calc(0.9 * var(--vwu));
+    cursor: pointer;
+    text-align: left;
+    background: #fff;
+    font-family: var(--font-canvas);
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .slide-nav-tile:hover {
+    border-color: var(--sigma-blue);
+    background: var(--sigma-blue-tint);
+  }
+
+  .slide-nav-tile.current {
+    border-color: var(--sigma-blue);
+    background: var(--sigma-blue-tint);
+  }
+
+  .slide-nav-tile .num {
+    font-weight: 700;
+    font-size: calc(0.95 * var(--vwu));
+    color: var(--sigma-blue);
+  }
+
+  .slide-nav-tile .lbl {
+    font-size: calc(0.8 * var(--vwu));
+    line-height: 1.35;
+    color: var(--sigma-ink);
+    margin-top: calc(0.3 * var(--vwu));
+  }
+
+  /* ---- Slide 2: chat app chrome (sidebar rail + top bar), modeled on the
+     real Sigma app shell so the demo reads as an actual product screen ---- */
+  .slide-chat {
+    font-family: var(--font-product);
+    /* In-product design system values — intentionally not the brand palette. */
+    --sigma-blue: #0059EB;
+    --sigma-blue-hover: #004BDD;
+    --sigma-blue-press: #003DCF;
+    --sigma-blue-tint: #EDF3FE;
+    --sigma-ink: #171717;
+    --sigma-slate: #505050;
+    --sigma-line: #E5E5E5;
+    --sigma-surface: #F7F7F7;
+    background: var(--sigma-surface);
+  }
+
+  .chat-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: calc(3.4 * var(--vwu));
+    background: #fff;
+    border-right: 1px solid var(--sigma-line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: calc(1.2 * var(--vwu)) 0;
+    gap: calc(1 * var(--vwu));
+  }
+
+  .rail-icon {
+    flex: none;
+    width: calc(1.7 * var(--vwu));
+    height: calc(1.7 * var(--vwu));
+    border-radius: var(--sigma-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sigma-slate);
+  }
+
+  .rail-icon svg {
+    width: calc(0.95 * var(--vwu));
+    height: calc(0.95 * var(--vwu));
+  }
+
+  .rail-icon.active {
+    background: var(--sigma-blue-tint);
+    color: var(--sigma-blue);
+  }
+
+  .rail-icon-recents {
+    transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  }
+
+  .rail-icon-recents.rail-hovering {
+    background: #EFEFEF;
+    color: var(--sigma-ink);
+  }
+
+  .rail-icon-recents.rail-pressed {
+    background: var(--sigma-blue-tint);
+    color: var(--sigma-blue);
+    transform: scale(0.85);
+  }
+
+  .click-ripple {
+    position: absolute;
+    width: calc(1.6 * var(--vwu));
+    height: calc(1.6 * var(--vwu));
+    margin: calc(-0.8 * var(--vwu)) 0 0 calc(-0.8 * var(--vwu));
+    border-radius: 50%;
+    background: rgba(0, 89, 235, 0.3);
+    pointer-events: none;
+    z-index: 22;
+    animation: rippleExpand 0.5s ease-out forwards;
+  }
+
+  @keyframes rippleExpand {
+    0% { transform: scale(0.3); opacity: 1; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+
+  .rail-spacer {
+    flex: 1;
+  }
+
+  /* ---- Recents flyout: opens off the sidebar instead of sliding the whole
+     chat away; a scripted cursor moves to and "clicks" the item of interest,
+     which is what actually reveals the diagram/video beat ---- */
+  .recents-flyout {
+    position: absolute;
+    /* top/left are set from JS to the real sidebar icon's position — these
+       are just a sane fallback before that runs */
+    top: calc(1.2 * var(--vwu));
+    left: calc(calc(3.4 * var(--vwu)) + calc(0.6 * var(--vwu)));
+    width: calc(17 * var(--vwu));
+    background: #fff;
+    border: 1px solid var(--sigma-line);
+    border-radius: var(--sigma-radius);
+    box-shadow: var(--sigma-shadow);
+    padding: calc(0.9 * var(--vwu)) 0;
+    opacity: 0;
+    transform: translateY(calc(0.3 * var(--vwu))) scale(0.98);
+    transform-origin: top left;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 20;
+  }
+
+  .recents-flyout.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .recents-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 calc(0.9 * var(--vwu)) calc(0.7 * var(--vwu));
+    margin-bottom: calc(0.4 * var(--vwu));
+    border-bottom: 1px solid var(--sigma-line);
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: calc(0.85 * var(--vwu));
+    color: var(--sigma-slate);
+  }
+
+  .recents-header svg {
+    width: calc(0.8 * var(--vwu));
+    height: calc(0.8 * var(--vwu));
+    color: var(--sigma-slate);
+  }
+
+  .recents-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: calc(15 * var(--vwu));
+    overflow: hidden;
+  }
+
+  .recents-list li {
+    padding: calc(0.45 * var(--vwu)) calc(0.9 * var(--vwu));
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: calc(0.85 * var(--vwu));
+    color: var(--sigma-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: calc(0.25 * var(--vwu));
+  }
+
+  .recents-list li.target {
+    font-weight: 600;
+  }
+
+  .recents-list li.selected {
+    background: var(--sigma-blue-tint);
+    color: var(--sigma-blue);
+  }
+
+  .fake-cursor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(1 * var(--vwu));
+    height: calc(1 * var(--vwu));
+    opacity: 0;
+    /* transform duration/easing is set per-move from JS — each leg of the
+       path gets its own timing instead of one fixed speed for every move */
+    transition: opacity 0.25s ease;
+    z-index: 21;
+    filter: drop-shadow(0 calc(0.1 * var(--vwu)) calc(0.2 * var(--vwu)) rgba(0, 0, 0, 0.35));
+  }
+
+  .fake-cursor.visible {
+    opacity: 1;
+  }
+
+  .rail-avatar {
+    flex: none;
+    width: calc(1.5 * var(--vwu));
+    height: calc(1.5 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-blue);
+    color: #fff;
+    font-family: var(--font-product);
+    font-weight: 600;
+    font-size: calc(0.62 * var(--vwu));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .help-fab {
+    position: absolute;
+    right: calc(1.4 * var(--vwu));
+    bottom: calc(1.4 * var(--vwu));
+    width: calc(2 * var(--vwu));
+    height: calc(2 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-ink);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--sigma-shadow);
+  }
+
+  .help-fab svg {
+    width: calc(1 * var(--vwu));
+    height: calc(1 * var(--vwu));
+  }
+
+  .chat-main {
+    position: absolute;
+    top: 0;
+    left: calc(3.4 * var(--vwu));
+    right: 0;
+    bottom: 0;
+    /* Feed and composer share this inset so the conversation never runs
+       wider than the box you type into. */
+    --chat-inset: 17%;
+  }
+
+  .chat-topbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(3 * var(--vwu));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 calc(1.6 * var(--vwu));
+    background: #fff;
+    border-bottom: 1px solid var(--sigma-line);
+  }
+
+  .topbar-title {
+    font-family: var(--font-product);
+    font-weight: 600;
+    font-size: calc(1 * var(--vwu));
+    color: var(--sigma-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: calc(1.6 * var(--vwu));
+  }
+
+  .chat-stage {
+    position: absolute;
+    top: calc(calc(3 * var(--vwu)) + 6%);
+    bottom: 16%;
+    left: var(--chat-inset);
+    right: var(--chat-inset);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .chat-feed {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: calc(1.4 * var(--vwu));
+    /* Caps the sent bubble only — the response runs the full column, the way
+       the real chat does. */
+    --bubble-max: 78%;
+  }
+
+  .prompt-box {
+    position: relative;
+    width: 100%;
+    min-height: calc(11 * var(--vwu));
+    background: #fff;
+    border: 1px solid var(--sigma-line);
+    border-radius: var(--sigma-radius);
+    box-shadow: var(--sigma-shadow);
+    padding: calc(1.8 * var(--vwu)) calc(2 * var(--vwu));
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Collapses into a sent chat bubble, Sigma AI chat style */
+  .prompt-box.sent {
+    align-self: flex-end;
+    width: auto;
+    max-width: var(--bubble-max);
+    min-height: 0;
+    background: var(--sigma-blue-tint);
+    border: none;
+    box-shadow: none;
+    border-radius: var(--sigma-radius) var(--sigma-radius) calc(0.15 * var(--vwu)) var(--sigma-radius);
+    padding: calc(0.9 * var(--vwu)) calc(1.3 * var(--vwu));
+  }
+
+  .prompt-box.sent .prompt-text {
+    font-size: calc(1.3 * var(--vwu));
+    line-height: 1.45;
+    min-height: 0;
+  }
+
+  .prompt-box.sent .prompt-footer {
+    display: none;
+  }
+
+  /* Turn 1+ bubbles: created only once "sent" from the follow-up bar */
+  .prompt-box[data-turn]:not([data-turn="0"]) {
+    display: none;
+    opacity: 0;
+    transform: translateY(calc(0.4 * var(--vwu)));
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .prompt-box[data-turn]:not([data-turn="0"]).visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Hand-drawn red circle drawn over a line of the conversation. It sits in
+     the slide layer rather than inside the bubble it rings: the chat stage
+     clips its own overflow, so a ring parented to the text got cut off at the
+     feed edge. JS measures the text and sizes this box around it. */
+  .annotate-ring {
+    position: absolute;
+    pointer-events: none;
+    z-index: 6;
+  }
+
+  .annotate-ring svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .annotate-ring path {
+    fill: none;
+    stroke: #D1344B;
+    stroke-width: calc(0.3 * var(--vwu));
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: annotate-draw 0.75s cubic-bezier(0.5, 0, 0.35, 1) forwards;
+  }
+
+  @keyframes annotate-draw {
+    to { stroke-dashoffset: 0; }
+  }
+
+  .prompt-text {
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: calc(1.5 * var(--vwu));
+    line-height: 1.5;
+    color: var(--sigma-ink);
+    white-space: pre-wrap;
+    min-height: calc(6 * var(--vwu));
+  }
+
+  .prompt-cursor {
+    display: inline-block;
+    width: 0.09em;
+    height: 1.1em;
+    background: var(--sigma-blue);
+    vertical-align: text-bottom;
+    margin-left: 1px;
+    visibility: hidden;
+  }
+
+  .prompt-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: calc(1.2 * var(--vwu));
+  }
+
+  .footer-left,
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: calc(0.5 * var(--vwu));
+  }
+
+  .input-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(0.3 * var(--vwu));
+    padding: calc(0.35 * var(--vwu)) calc(0.7 * var(--vwu));
+    border: 1px solid var(--sigma-line);
+    border-radius: 999px;
+    font-family: var(--font-product);
+    font-size: calc(0.85 * var(--vwu));
+    color: var(--sigma-ink);
+    white-space: nowrap;
+  }
+
+  .input-chip svg {
+    width: calc(0.6 * var(--vwu));
+    height: calc(0.6 * var(--vwu));
+    color: var(--sigma-slate);
+  }
+
+  .prompt-send {
+    width: calc(2.4 * var(--vwu));
+    height: calc(2.4 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+  }
+
+  .prompt-send.ready {
+    background: var(--sigma-blue);
+  }
+
+  .prompt-send svg {
+    width: calc(1 * var(--vwu));
+    height: calc(1 * var(--vwu));
+  }
+
+  /* ---- Slide 2: assistant response (plain, Sigma AI chat style — no card) ---- */
+  /* No avatar on responses — the real chat runs assistant replies as plain
+     flush-left text, distinguished only by the sent-bubble above it */
+  .assistant-turn {
+    display: none;
+    opacity: 0;
+    transform: translateY(calc(0.4 * var(--vwu)));
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .assistant-turn.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .assistant-body {
+    min-width: 0;
+  }
+
+  .response-loading {
+    display: flex;
+    align-items: center;
+    height: calc(1.9 * var(--vwu));
+    gap: calc(0.35 * var(--vwu));
+  }
+
+  .response-loading span.dot {
+    display: inline-block;
+    width: calc(0.4 * var(--vwu));
+    height: calc(0.4 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-slate);
+    animation: dotPulse 1.2s infinite ease-in-out;
+  }
+
+  .response-loading span.dot:nth-child(2) { animation-delay: 0.2s; }
+  .response-loading span.dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes dotPulse {
+    0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  .response-content {
+    display: none;
+  }
+
+  .response-content.visible {
+    display: block;
+  }
+
+  .response-title {
+    --stroke-ratio: 0.003;
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: calc(1.75 * var(--vwu));
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    color: var(--sigma-ink);
+    -webkit-text-stroke-width: calc(1em * var(--stroke-ratio));
+    -webkit-text-stroke-color: var(--sigma-ink);
+    margin: 0 0 calc(0.7 * var(--vwu));
+  }
+
+  .response-desc {
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: calc(1.24 * var(--vwu));
+    line-height: 1.6;
+    color: var(--sigma-ink);
+  }
+
+  .response-desc p {
+    margin: 0 0 calc(0.9 * var(--vwu));
+  }
+
+  .response-desc p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Message action row (copy / thumbs), matching the real chat's per-message toolbar */
+  .response-actions {
+    display: flex;
+    align-items: center;
+    gap: calc(0.2 * var(--vwu));
+    margin-top: calc(0.9 * var(--vwu));
+  }
+
+  .mini-icon-btn {
+    flex: none;
+    width: calc(1.5 * var(--vwu));
+    height: calc(1.5 * var(--vwu));
+    border: none;
+    background: transparent;
+    border-radius: var(--sigma-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ADADAD;
+  }
+
+  .mini-icon-btn svg {
+    width: calc(0.8 * var(--vwu));
+    height: calc(0.8 * var(--vwu));
+  }
+
+  .response-timestamp {
+    font-family: var(--font-product);
+    font-size: calc(0.85 * var(--vwu));
+    color: #ADADAD;
+    margin-left: calc(0.3 * var(--vwu));
+  }
+
+  /* ---- Welcome header: shown only before the first prompt is sent ---- */
+  .welcome-header {
+    display: flex;
+    align-items: center;
+    gap: calc(0.8 * var(--vwu));
+    margin-bottom: calc(1.4 * var(--vwu));
+  }
+
+  .welcome-header.hidden {
+    display: none;
+  }
+
+  .welcome-icon {
+    width: calc(1.7 * var(--vwu));
+    height: calc(1.7 * var(--vwu));
+  }
+
+  .welcome-title {
+    font-family: var(--font-product);
+    font-weight: 700;
+    font-size: calc(1.5 * var(--vwu));
+    color: var(--sigma-ink);
+    margin: 0;
+  }
+
+  .stream-cursor {
+    display: inline-block;
+    width: 0.09em;
+    height: 1em;
+    background: var(--sigma-slate);
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: streamBlink 0.9s steps(1) infinite;
+  }
+
+  @keyframes streamBlink {
+    50% { opacity: 0; }
+  }
+
+  /* ---- Slide 2: follow-up compose bar (appears once "in" the chat) ---- */
+  /* Composer is the same bordered-card shape as the initial prompt box (not a
+     pill) — a text row on top, controls (add-source/agent chip/mic/send) below */
+  .followup-bar {
+    position: absolute;
+    left: var(--chat-inset);
+    right: var(--chat-inset);
+    bottom: 7%;
+    transform: translateY(calc(0.6 * var(--vwu)));
+    background: #fff;
+    border: 1px solid var(--sigma-line);
+    border-radius: var(--sigma-radius);
+    box-shadow: var(--sigma-shadow);
+    padding: calc(1.1 * var(--vwu)) calc(1.3 * var(--vwu));
+    display: flex;
+    flex-direction: column;
+    gap: calc(1 * var(--vwu));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .followup-bar.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .followup-controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .followup-icon-btn {
+    flex: none;
+    width: calc(1.8 * var(--vwu));
+    height: calc(1.8 * var(--vwu));
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sigma-slate);
+  }
+
+  .followup-icon-btn.add-source {
+    border: 1px solid var(--sigma-line);
+  }
+
+  .followup-icon-btn svg {
+    width: calc(0.9 * var(--vwu));
+    height: calc(0.9 * var(--vwu));
+  }
+
+  .followup-placeholder {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: calc(1.05 * var(--vwu));
+    color: #8C8C8C;
+    display: flex;
+    align-items: center;
+  }
+
+  .followup-live {
+    color: var(--sigma-ink);
+    white-space: pre;
+  }
+
+  .followup-cursor {
+    display: inline-block;
+    width: 0.09em;
+    height: 1.1em;
+    background: var(--sigma-blue);
+    margin-right: 0.4em;
+    animation: streamBlink 0.9s steps(1) infinite;
+  }
+
+  .followup-send {
+    flex: none;
+    width: calc(2 * var(--vwu));
+    height: calc(2 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .followup-send svg {
+    width: calc(0.85 * var(--vwu));
+    height: calc(0.85 * var(--vwu));
+  }
+
+  .composer-disclaimer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(7% - calc(1.6 * var(--vwu)));
+    text-align: center;
+    font-family: var(--font-product);
+    font-size: calc(0.75 * var(--vwu));
+    color: #ADADAD;
+    margin: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .followup-bar.visible ~ .composer-disclaimer {
+    opacity: 1;
+  }
+
+  /* ---- Slide 3: in-chat facts list response ---- */
+  .response-lead {
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: calc(1.24 * var(--vwu));
+    line-height: 1.6;
+    color: var(--sigma-ink);
+    margin: 0 0 calc(0.9 * var(--vwu));
+  }
+
+  .response-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .response-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(0.7 * var(--vwu));
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: calc(1.18 * var(--vwu));
+    line-height: 1.5;
+    color: var(--sigma-ink);
+    padding: calc(0.5 * var(--vwu)) 0;
+    opacity: 0;
+    transform: translateY(calc(0.3 * var(--vwu)));
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .response-list li.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Landing on the real answer: it firms up, the others recede. Muting by
+     colour rather than opacity keeps everything fully opaque. */
+  .response-list li.picked {
+    font-weight: 700;
+    color: var(--sigma-ink);
+  }
+
+  .response-list li.muted { color: #B4B4BC; }
+  .response-list li.muted::before { background: #D8D8DE; }
+
+  .response-list li::before {
+    content: "";
+    flex: none;
+    width: calc(0.4 * var(--vwu));
+    height: calc(0.4 * var(--vwu));
+    margin-top: calc(0.5 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-blue);
+  }
+
+  /* ---- Slide 4: grouped / nested response ---- */
+  /* Five facts as flags off a timeline. Flags size to their own content and
+     align at the top; the pole below each one flexes to make up the difference,
+     so every tick still lands on the line and no flag carries dead space. */
+  .response-cards {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: calc(0.8 * var(--vwu));
+    margin-top: calc(1.2 * var(--vwu));
+  }
+
+  /* The ground the poles stand on. Both this and the cards are positioned, so
+     without the z-index pair the rule paints last and sits on top of the ticks
+     rather than running behind them. */
+  .response-cards::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(0.7 * var(--vwu));
+    z-index: 0;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--sigma-line);
+  }
+
+  .response-card {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: translateY(calc(0.4 * var(--vwu)));
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .response-card.visible { opacity: 1; transform: none; }
+
+  /* Square on the pole side, rounded on the free side. Flags stretch to a
+     common height set by the tallest, per the brand's card rule, so the poles
+     below them stay a uniform length. */
+  .fact-flag {
+    flex: 1 1 auto;
+    border: 1px solid var(--sigma-line);
+    border-left: calc(0.22 * var(--vwu)) solid var(--sigma-blue);
+    border-radius: 0 var(--sigma-radius) var(--sigma-radius) 0;
+    background: #fff;
+    box-shadow: var(--sigma-shadow);
+    padding: calc(0.75 * var(--vwu)) calc(0.9 * var(--vwu));
+  }
+
+  .fact-stem {
+    flex: 0 0 auto;
+    height: calc(1.5 * var(--vwu));
+    width: calc(0.22 * var(--vwu));
+    margin-bottom: calc(0.7 * var(--vwu));
+    background: var(--sigma-blue);
+  }
+
+  .fact-tick {
+    position: absolute;
+    left: calc(-0.165 * var(--vwu));
+    bottom: calc(0.42 * var(--vwu));
+    width: calc(0.55 * var(--vwu));
+    height: calc(0.55 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-blue);
+  }
+
+  .response-card-title {
+    font-family: var(--font-product);
+    font-weight: 700;
+    font-size: calc(1.15 * var(--vwu));
+    line-height: 1.28;
+    color: var(--sigma-ink);
+  }
+
+  .response-card-detail {
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: calc(0.92 * var(--vwu));
+    line-height: 1.35;
+    color: var(--sigma-slate);
+    margin-top: calc(0.45 * var(--vwu));
+  }
+
+  .response-groups {
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.7 * var(--vwu));
+  }
+
+  .response-group {
+    opacity: 0;
+    transform: translateY(calc(0.3 * var(--vwu)));
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .response-group.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .response-group-label {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(0.7 * var(--vwu));
+    font-family: var(--font-product);
+    font-weight: 600;
+    font-size: calc(1.18 * var(--vwu));
+    line-height: 1.4;
+    color: var(--sigma-ink);
+    margin: 0 0 calc(0.4 * var(--vwu));
+  }
+
+  .response-group-label::before {
+    content: "";
+    flex: none;
+    width: calc(0.4 * var(--vwu));
+    height: calc(0.4 * var(--vwu));
+    margin-top: calc(0.5 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-blue);
+  }
+
+  .response-sublist {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 calc(1.1 * var(--vwu));
+  }
+
+  .response-sublist li {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(0.6 * var(--vwu));
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: calc(1.08 * var(--vwu));
+    line-height: 1.5;
+    color: var(--sigma-slate);
+    padding: calc(0.2 * var(--vwu)) 0;
+    opacity: 0;
+    transform: translateY(calc(0.2 * var(--vwu)));
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .response-sublist li.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .response-sublist li::before {
+    content: "–";
+    flex: none;
+    color: var(--sigma-slate);
+  }
+
+  /* ---- Chat turn transitions: previous exchange slides off the top,
+     the new one takes its place and the response builds down beneath it ---- */
+  .prompt-box.exiting,
+  .assistant-turn.exiting {
+    opacity: 0;
+    transform: translateY(calc(-1.2 * var(--vwu)));
+  }
+
+  /* ---- Between-section beats: the whole chat slides off, a before-state
+     diagram takes its place, then a placeholder video, then the chat returns
+     exactly where it left off ---- */
+  .chat-live-area {
+    position: absolute;
+    inset: 0;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .chat-live-area.chat-off {
+    opacity: 0;
+    transform: translateY(calc(-1.6 * var(--vwu)));
+    pointer-events: none;
+  }
+
+  .overlay-stage {
+    font-family: var(--font-canvas);
+    /* Back to the brand palette: an overlay is deck surface, not product UI. */
+    --sigma-blue: #1A70F1;
+    --sigma-blue-hover: #1660D6;
+    --sigma-blue-press: #08377E;
+    --sigma-blue-tint: #EEF3FF;
+    --sigma-ink: #111114;
+    --sigma-slate: #5F5F66;
+    --sigma-line: #E5E5E9;
+    --sigma-surface: #F7F7F8;
+    position: absolute;
+    top: calc(calc(3 * var(--vwu)) + 3%);
+    bottom: 6%;
+    left: 5%;
+    right: 5%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .overlay-stage.visible {
+    display: flex;
+    opacity: 1;
+  }
+
+  .diagram-panel,
+  .video-panel {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .diagram-panel.visible,
+  .video-panel.visible {
+    display: flex;
+  }
+
+  /* Retired: the kicker line above each diagram. The titles still live in
+     OVERLAYS and still name the steps in the jump grid and the URLs — they
+     just don't render on the slide. Drop the display line to bring them back. */
+  .diagram-eyebrow {
+    display: none;
+    font-family: var(--font-canvas);
+    font-weight: 600;
+    font-size: calc(0.95 * var(--vwu));
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sigma-slate);
+    margin: 0 0 calc(2 * var(--vwu));
+  }
+
+  .diagram-flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+    gap: calc(0.6 * var(--vwu));
+  }
+
+  .diagram-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(0.7 * var(--vwu));
+    width: calc(8 * var(--vwu));
+  }
+
+  .diagram-step-icon {
+    flex: none;
+    width: calc(2.6 * var(--vwu));
+    height: calc(2.6 * var(--vwu));
+    border-radius: 50%;
+    background: var(--sigma-blue-tint);
+    color: var(--sigma-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-canvas);
+    font-weight: 700;
+    font-size: calc(1.1 * var(--vwu));
+  }
+
+  .diagram-step-label {
+    font-family: var(--font-canvas);
+    font-weight: 400;
+    font-size: calc(0.85 * var(--vwu));
+    line-height: 1.35;
+    text-align: center;
+    color: var(--sigma-ink);
+  }
+
+  .diagram-arrow {
+    flex: none;
+    color: var(--sigma-line);
+    font-size: calc(1.4 * var(--vwu));
+    margin-top: calc(1 * var(--vwu));
+  }
+
+  /* ---- Loop layout: two concentric rings with the cycle's steps around them
+     and one thick track running out to a dashboard. Static by design — the
+     source diagram carries its direction by arrangement, not motion. ---- */
+  .diagram-panel.fill-panel {
+    height: 100%;
+    justify-content: center;
+  }
+
+  .diagram-flow.svg-mode {
+    display: block;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  /* ---- See-saw: the trade-off that never settles. The lever pivots on the
+     fulcrum point rather than its own bounding box, so it tips like a real
+     lever instead of wobbling around its middle. ---- */
+  /* ---- Tree: the goal, what it actually turns on, the three levers. Same flat
+     vocabulary as the loop diagram — solid fills, hairline connectors, no
+     shadows — so the two read as one system. Revealed in stages. ---- */
+  .tree-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-canvas);
+  }
+
+  .tree-root { fill: var(--sigma-blue); }
+  .tree-branch-icon { color: var(--sigma-blue); }
+  .tree-branch-card { fill: #fff; stroke: var(--sigma-line); stroke-width: 2; }
+
+  .tree-link {
+    fill: none;
+    stroke: var(--sigma-line);
+    stroke-width: 2.5;
+  }
+
+  .tree-label-light { fill: #fff; font-weight: 700; }
+  .tree-label-branch { fill: var(--sigma-ink); font-weight: 700; }
+
+  .tree-part { opacity: 0; transition: opacity 0.4s ease; }
+  .tree-part.shown { opacity: 1; }
+
+  /* Branch cards land in sequence rather than all at once. */
+  .tree-col { transform: translateY(calc(0.5 * var(--vwu))); transition: transform 0.45s cubic-bezier(0.22, 1, 0.3, 1); }
+  .tree-part-branches.shown .tree-col { transform: none; }
+  .tree-part-branches.shown .tree-col:nth-of-type(2) { transition-delay: 0.07s; }
+  .tree-part-branches.shown .tree-col:nth-of-type(3) { transition-delay: 0.14s; }
+
+  .tree-word-trusted,
+  .tree-word-cost { opacity: 0; transition: opacity 0.4s ease; }
+  .tree-svg.trusted .tree-word-trusted { opacity: 1; }
+  .tree-svg.costly .tree-word-cost { opacity: 1; }
+
+  /* Geometry is a CSS property on SVG rects, so the pill grows into the wider
+     label rather than snapping to it. */
+  .tree-hub {
+    fill: var(--sigma-ink);
+    transition: x 0.45s cubic-bezier(0.22, 1, 0.3, 1), width 0.45s cubic-bezier(0.22, 1, 0.3, 1);
+  }
+
+  /* ---- Goals: three parallel aims, sharing the tree's card vocabulary so the
+     two canvas slides read as siblings. ---- */
+  .goals-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-canvas);
+  }
+
+  .goals-card { fill: #fff; stroke: var(--sigma-line); stroke-width: 1.8; }
+  .goals-icon { color: var(--sigma-blue); }
+  .goals-label {
+    display: flex;
+    align-items: flex-end;
+    height: 100%;
+    margin: 0;
+    font-family: var(--font-canvas);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--sigma-ink);
+  }
+
+  .goals-link { fill: none; stroke: var(--sigma-line); stroke-width: 2.5; }
+  .goals-box { fill: #fff; stroke: var(--sigma-line); stroke-width: 1.8; }
+  .goals-box-placeholder { fill: var(--sigma-slate); font-weight: 400; }
+  .goals-send { fill: var(--sigma-blue); }
+  .goals-send-arrow { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .goals-caption { fill: var(--sigma-slate); font-weight: 600; letter-spacing: 0.1em; }
+
+  /* Stage two: the three aims converge on one prompt. */
+  .goals-converge { opacity: 0; transition: opacity 0.45s ease; }
+  .goals-converge.shown { opacity: 1; }
+
+  /* ---- Process: left to right, dots and lines. One shared source, then two
+     tracks — analytics ending in a decision, production ending in automation.
+     Same flat vocabulary as the other diagrams. ---- */
+  .proc-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-canvas);
+  }
+
+  .proc-link {
+    fill: none;
+    stroke: var(--sigma-line);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+
+  .proc-dot { fill: var(--sigma-ink); }
+  .proc-dot-outcome { fill: var(--sigma-blue); }
+
+  .proc-role { font-weight: 700; font-size: 17px; fill: var(--sigma-ink); }
+  .proc-did { font-weight: 400; font-size: 15px; fill: var(--sigma-slate); }
+
+  .proc-brace { fill: none; stroke: var(--sigma-line); stroke-width: 2.5; }
+  .proc-note-title { font-weight: 700; font-size: 17px; fill: var(--sigma-ink); }
+  .proc-note-body { font-weight: 400; font-size: 15px; fill: var(--sigma-slate); }
+
+  .proc-step,
+  .proc-note,
+  .proc-brace {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .proc-step.shown,
+  .proc-note.shown,
+  .proc-brace.shown { opacity: 1; }
+
+  .seesaw-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-canvas);
+  }
+
+  .seesaw-lever {
+    transform-box: view-box;
+    transform-origin: 450px 248px;
+    animation: seesawRock 5.5s ease-in-out infinite;
+  }
+
+  @keyframes seesawRock {
+    0%, 100% { transform: rotate(-7.5deg); }
+    50%      { transform: rotate(7.5deg); }
+  }
+
+  .seesaw-pan-title { fill: #fff; font-size: 25px; font-weight: 700; letter-spacing: -0.01em; }
+  .seesaw-pan-sub { fill: #fff; font-size: 19px; font-weight: 400; opacity: 0.72; }
+
+  .seesaw-icon {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .seesaw-plinth { fill: var(--sigma-line); }
+  .seesaw-shadow { fill: var(--sigma-ink); opacity: 0.07; }
+
+  .seesaw-fulcrum-label {
+    fill: var(--sigma-slate);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .seesaw-stop-beam-a { stop-color: var(--sigma-ink); }
+  .seesaw-stop-beam-b { stop-color: var(--sigma-slate); }
+  .seesaw-stop-speed-a { stop-color: #2E7BFF; }
+  .seesaw-stop-speed-b { stop-color: var(--sigma-blue-press); }
+  .seesaw-stop-data-a { stop-color: #3A3A3A; }
+  .seesaw-stop-data-b { stop-color: var(--sigma-ink); }
+  .seesaw-stop-fulcrum-a { stop-color: var(--sigma-slate); }
+  .seesaw-stop-fulcrum-b { stop-color: var(--sigma-ink); }
+
+  .loop-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-canvas);
+    /* Opaque ends of the arc's sweep. Everything blue in the loop keys to
+       these, so nothing in the diagram needs to be see-through. The base stays
+       well clear of the surface colour — otherwise the dim side of the sweep
+       reads as a hole in the ring. */
+    --loop-arc-peak: color-mix(in srgb, var(--sigma-blue) 40%, var(--sigma-surface));
+    --loop-arc-base: color-mix(in srgb, var(--sigma-blue) 14%, var(--sigma-surface));
+  }
+
+  /* The core keeps turning — the one piece of motion in the diagram. */
+  /* Walking the loop: the called-out step goes bold and gains a ring. Nothing
+     dims — every step stays at full strength and full legibility. */
+  .loop-node.is-focus .loop-label { font-weight: 700; }
+
+  .loop-focus-ring {
+    display: none;
+    fill: none;
+    stroke: var(--sigma-blue);
+    stroke-width: 3;
+  }
+
+  .loop-node.is-focus .loop-focus-ring { display: block; }
+
+  .loop-core {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg,
+      var(--loop-arc-peak),
+      var(--loop-arc-base) 42%,
+      var(--loop-arc-base) 62%,
+      var(--loop-arc-peak) 100%);
+    /* Punch the middle back out — masking rather than painting the background
+       colour over it keeps the hole correct on any surface. 68.4% = the inner
+       ring's radius as a fraction of the outer. */
+    -webkit-mask: radial-gradient(circle closest-side, transparent 68.2%, #000 68.7%);
+    mask: radial-gradient(circle closest-side, transparent 68.2%, #000 68.7%);
+    animation: loopCoreSpin 13s linear infinite;
+  }
+
+  /* Counter-clockwise, matching the direction the steps actually run. */
+  @keyframes loopCoreSpin {
+    to { transform: rotate(-360deg); }
+  }
+
+  .loop-ring,
+  .loop-ring-inner {
+    fill: none;
+    stroke: var(--sigma-line);
+    stroke-width: 8;
+  }
+
+  .loop-stop-halo { stop-color: var(--sigma-line); }
+  .loop-stop-data { stop-color: var(--loop-arc-base); }
+
+  .loop-bar-halo { stroke: url(#loopFadeHalo); stroke-width: 48; }
+  .loop-bar-data { stroke: url(#loopFadeData); stroke-width: 36; }
+  .loop-bar-biz { stroke: var(--loop-arc-peak); stroke-width: 36; }
+
+  .loop-halo { fill: var(--sigma-line); }
+  .loop-disc-data { fill: var(--sigma-ink); }
+  .loop-disc-biz { fill: var(--sigma-blue); }
+
+  .loop-icon {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .loop-icon .loop-icon-punch { fill: currentColor; }
+
+  .loop-lead { stroke: var(--sigma-slate); stroke-width: 1.2; fill: none; }
+
+  .loop-label {
+    font-size: 14px;
+    font-weight: 400;
+    fill: var(--sigma-slate);
+  }
+
+  .loop-callout {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    fill: var(--sigma-blue);
+  }
+
+  .video-panel {
+    gap: calc(1.1 * var(--vwu));
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+  }
+
+  /* Height is what the stage is short on, so let flex set it and derive the
+     width from the ratio — that way a taller clip shrinks instead of spilling. */
+  .video-still {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #fff;
+  }
+
+  .video-frame {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: auto;
+    /* Width is derived from the ratio, so capping height shrinks both and
+       leaves breathing room around the player rather than filling the stage. */
+    max-height: 88%;
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #0c0c0c;
+    border-radius: var(--sigma-radius);
+    box-shadow: var(--sigma-shadow);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .video-embed {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+
+  .video-play {
+    width: calc(5 * var(--vwu));
+    height: calc(5 * var(--vwu));
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .video-play svg {
+    width: calc(1.9 * var(--vwu));
+    height: calc(1.9 * var(--vwu));
+    margin-left: calc(0.25 * var(--vwu));
+  }
+
+  .video-caption {
+    font-family: var(--font-canvas);
+    font-weight: 600;
+    font-size: calc(1.3 * var(--vwu));
+    color: var(--sigma-ink);
+    margin: 0;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+  <div class="slide-container" id="stage">
+
+    <section class="slide slide-field slide-title active" data-index="0">
+      <div class="field-glow"><span class="glow-a"></span><span class="glow-b"></span></div>
+      <div class="field-grid"></div>
+      <div class="field-card">
+        <img class="logo" src="assets/logos/Sigma_PrimaryLogo_ShadowBlack.svg" alt="Sigma">
+        <div class="headline-wrap">
+          <h1><span class="line">The SaaSpocalypse:</span><span class="line">How to Win in the Next Decade</span></h1>
+          <p class="subtitle">Luke Stanke &nbsp;·&nbsp; Marketing Leader, Sigma Computing &nbsp;·&nbsp; Big Data LDN 2026</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide slide-field slide-statement" data-index="statement">
+      <div class="field-glow"><span class="glow-a"></span><span class="glow-b"></span></div>
+      <div class="field-grid"></div>
+      <div class="field-card">
+        <p>The way we analyse and build is fundamentally changing</p>
+      </div>
+    </section>
+
+    <section class="slide slide-iceberg" data-index="iceberg">
+      <svg class="ice-bg" viewBox="0 0 1000 562.5" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="iceWater" x1="0" y1="0" x2="0" y2="1">
+            <stop class="ice-stop-top" offset="0"/>
+            <stop class="ice-stop-mid" offset="0.42"/>
+            <stop class="ice-stop-deep" offset="1"/>
+          </linearGradient>
+
+          <!-- The swell cuts the berg, rather than the berg being drawn in two
+               pieces that meet at a fixed line. Both clips carry the same
+               drift as the water, so the waterline crosses the ice exactly
+               wherever it happens to be. -->
+          <clipPath id="iceAbove" clipPathUnits="userSpaceOnUse">
+            <path class="ice-clip" d="M-500 190 C -457.5 181, -417.5 181, -375 190 C -332.5 199, -292.5 199, -250 190 C -207.5 181, -167.5 181, -125 190 C -82.5 199, -42.5 199, 0 190 C 42.5 181, 82.5 181, 125 190 C 167.5 199, 207.5 199, 250 190 C 292.5 181, 332.5 181, 375 190 C 417.5 199, 457.5 199, 500 190 C 542.5 181, 582.5 181, 625 190 C 667.5 199, 707.5 199, 750 190 C 792.5 181, 832.5 181, 875 190 C 917.5 199, 957.5 199, 1000 190 C 1042.5 181, 1082.5 181, 1125 190 C 1167.5 199, 1207.5 199, 1250 190 C 1292.5 181, 1332.5 181, 1375 190 C 1417.5 199, 1457.5 199, 1500 190 V-240 H-500 Z"/>
+          </clipPath>
+          <clipPath id="iceBelow" clipPathUnits="userSpaceOnUse">
+            <path class="ice-clip" d="M-500 190 C -457.5 181, -417.5 181, -375 190 C -332.5 199, -292.5 199, -250 190 C -207.5 181, -167.5 181, -125 190 C -82.5 199, -42.5 199, 0 190 C 42.5 181, 82.5 181, 125 190 C 167.5 199, 207.5 199, 250 190 C 292.5 181, 332.5 181, 375 190 C 417.5 199, 457.5 199, 500 190 C 542.5 181, 582.5 181, 625 190 C 667.5 199, 707.5 199, 750 190 C 792.5 181, 832.5 181, 875 190 C 917.5 199, 957.5 199, 1000 190 C 1042.5 181, 1082.5 181, 1125 190 C 1167.5 199, 1207.5 199, 1250 190 C 1292.5 181, 1332.5 181, 1375 190 C 1417.5 199, 1457.5 199, 1500 190 V800 H-500 Z"/>
+          </clipPath>
+
+          <!-- One continuous berg, drawn twice: once clipped to the air, once
+               to the water. Two tones either side of the spine so it reads as
+               a solid with a lit face and a shaded one. -->
+          <g id="bergShape">
+            <path class="ice-body" d="M322 108 L286 168 L262 190 L210 253 L182 334 L196 418 L244 484 L306 505 L366 489 L410 424 L432 334 L420 256 L382 190 L360 142 L346 158 Z"/>
+            <path class="ice-body-shade" d="M322 108 L338 190 L326 324 L306 505 L366 489 L410 424 L432 334 L420 256 L382 190 L360 142 L346 158 Z"/>
+            <g class="ice-facet">
+            <path d="M322 108 L338 190 L326 324 L306 505"/>
+            <path d="M346 158 L350 190"/>
+            <path d="M262 190 L286 358 L306 505"/>
+            <path d="M286 358 L326 324"/>
+            <path d="M182 334 L286 358"/>
+            <path d="M210 253 L286 358"/>
+            <path d="M244 484 L286 358"/>
+            <path d="M432 334 L326 324"/>
+            <path d="M420 256 L326 324"/>
+            <path d="M410 424 L326 324"/>
+            <path d="M366 489 L326 324"/>
+            </g>
+            <path class="ice-edge" d="M322 108 L286 168 L262 190 L210 253 L182 334 L196 418 L244 484 L306 505 L366 489 L410 424 L432 334 L420 256 L382 190 L360 142 L346 158 Z"/>
+          </g>
+        </defs>
+
+        <g class="ice-wave">
+          <path class="ice-water" d="M-500 190 C -457.5 181, -417.5 181, -375 190 C -332.5 199, -292.5 199, -250 190 C -207.5 181, -167.5 181, -125 190 C -82.5 199, -42.5 199, 0 190 C 42.5 181, 82.5 181, 125 190 C 167.5 199, 207.5 199, 250 190 C 292.5 181, 332.5 181, 375 190 C 417.5 199, 457.5 199, 500 190 C 542.5 181, 582.5 181, 625 190 C 667.5 199, 707.5 199, 750 190 C 792.5 181, 832.5 181, 875 190 C 917.5 199, 957.5 199, 1000 190 C 1042.5 181, 1082.5 181, 1125 190 C 1167.5 199, 1207.5 199, 1250 190 C 1292.5 181, 1332.5 181, 1375 190 C 1417.5 199, 1457.5 199, 1500 190 V620 H-500 Z"/>
+        </g>
+
+        <use class="ice-above" href="#bergShape" clip-path="url(#iceAbove)"/>
+        <use class="ice-below ice-deep" href="#bergShape" clip-path="url(#iceBelow)"/>
+
+        <g class="ice-wave">
+          <path class="ice-surface" d="M-500 190 C -457.5 181, -417.5 181, -375 190 C -332.5 199, -292.5 199, -250 190 C -207.5 181, -167.5 181, -125 190 C -82.5 199, -42.5 199, 0 190 C 42.5 181, 82.5 181, 125 190 C 167.5 199, 207.5 199, 250 190 C 292.5 181, 332.5 181, 375 190 C 417.5 199, 457.5 199, 500 190 C 542.5 181, 582.5 181, 625 190 C 667.5 199, 707.5 199, 750 190 C 792.5 181, 832.5 181, 875 190 C 917.5 199, 957.5 199, 1000 190 C 1042.5 181, 1082.5 181, 1125 190 C 1167.5 199, 1207.5 199, 1250 190 C 1292.5 181, 1332.5 181, 1375 190 C 1417.5 199, 1457.5 199, 1500 190"/>
+        </g>
+
+        <path class="ice-leader" d="M372 136 H408"/>
+      </svg>
+
+      <div class="ice-head">
+        <h2>What it takes to bring an app into production</h2>
+        <p class="ice-reveal" style="--i:0">What it takes to run a generated dashboard in production</p>
+      </div>
+
+      <div class="ice-cost ice-cost-top ice-reveal" style="--i:1">
+        <span class="ice-dollars">$ $</span>
+        <span class="ice-cost-note">build it once</span>
+      </div>
+
+      <div class="ice-callout">Dashboard/App</div>
+      <div class="ice-label ice-label-above">Initial build</div>
+      <div class="ice-label ice-label-below ice-reveal" style="--i:1">Other core requirements</div>
+
+      <div class="ice-runtime ice-reveal" style="--i:2">
+        <div class="ice-runtime-title">The enterprise runtime layer</div>
+        <div class="ice-cols">
+          <div>
+            <h4>The basics</h4>
+            <ul>
+              <li>Exports &amp; delivery</li>
+              <li>Permissions &amp; access</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Platform work</h4>
+            <ul>
+              <li>Version history &amp; rollback</li>
+              <li>Scheduled refresh &amp; delivery</li>
+              <li>Governed data models</li>
+              <li>Hosting &amp; infrastructure</li>
+              <li>Governed writeback</li>
+              <li>Monitoring &amp; usage stats</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Shipping it</h4>
+            <ul>
+              <li>PR review on every change</li>
+              <li>GitHub governance to maintain</li>
+              <li>Ships only through the IT queue</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="ice-cost ice-cost-bottom ice-reveal" style="--i:1">
+        <span class="ice-dollars">$ $ $ $ $</span>
+        <span class="ice-cost-note">run it forever</span>
+      </div>
+    </section>
+
+    <!-- Same stack as the show of hands, closing the talk instead of opening
+         the audience up. -->
+    <section class="slide slide-takeaways" data-index="takeaways">
+      <div class="hands-stack">
+        <p class="hands-q"><span class="hands-num">1</span><span>The line between a dashboard, an app and an agent is gone</span></p>
+        <p class="hands-q"><span class="hands-num">2</span><span>Generating it is cheap. Running it is the bill you keep paying</span></p>
+        <p class="hands-q"><span class="hands-num">3</span><span>Put governance underneath, or your experts end up back in the IT queue</span></p>
+      </div>
+    </section>
+
+    <section class="slide slide-field slide-divider" data-index="appendix">
+      <div class="field-glow"><span class="glow-a"></span><span class="glow-b"></span></div>
+      <div class="field-grid"></div>
+      <div class="field-card">
+        <h2>Appendix</h2>
+      </div>
+    </section>
+
+    <section class="slide slide-matrix" data-index="matrix">
+      <div class="matrix">
+        <div class="mx-corner"></div>
+        <div class="mx-head" style="--i:0">Ad hoc analysis</div>
+        <div class="mx-head" style="--i:1">Repeatable analysis</div>
+        <div class="mx-head" style="--i:2">Applications</div>
+        <div class="mx-head" style="--i:3">Automation</div>
+
+        <div class="mx-row-label mx-before">Before AI</div>
+        <div class="mx-cell" style="--i:0">Spreadsheets and unsaved dashboards</div>
+        <div class="mx-cell" style="--i:1">BI dashboards</div>
+        <div class="mx-cell" style="--i:2">Off-the-shelf software</div>
+        <div class="mx-cell" style="--i:3">RPA</div>
+
+        <div class="mx-corner"></div>
+        <div class="mx-arrow" style="--i:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="mx-arrow" style="--i:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="mx-arrow" style="--i:2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="mx-arrow" style="--i:3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+
+        <div class="mx-row-label mx-now">Now</div>
+        <div class="mx-cell now" style="--i:0" data-ring="chat">Chat</div>
+        <div class="mx-cell now mx-span" style="--i:1" data-ring="vibe">Vibe-coding</div>
+        <div class="mx-cell now" style="--i:3" data-ring="agents">Agents</div>
+      </div>
+    </section>
+
+    <section class="slide slide-hands" data-index="hands">
+      <div class="hands-stack">
+        <p class="hands-q"><span class="hands-num">1</span><span>How many of you have vibe-coded a dashboard or an app?</span></p>
+        <p class="hands-q"><span class="hands-num">2</span><span>…put that vibe-coded dashboard or app into production?</span></p>
+        <p class="hands-q"><span class="hands-num">3</span><span>…put tight security controls behind it?</span></p>
+        <p class="hands-q"><span class="hands-num">4</span><span>What happens when you scale this to everyone at your company?</span></p>
+      </div>
+    </section>
+
+    <section class="slide slide-feud" data-index="feud">
+      <div class="feud-board">
+        <h2 class="feud-title"></h2>
+        <ul class="feud-slots"></ul>
+        <div class="feud-flash">&#10007;</div>
+      </div>
+      <div class="feud-strikes">
+        <span class="feud-strikes-label">Strikes</span>
+        <button class="feud-x-btn" type="button" aria-label="Give a strike">&#10007;</button>
+        <div class="feud-x-row"></div>
+        <button class="feud-reset" type="button">reset</button>
+      </div>
+    </section>
+
+    <section class="slide slide-chat" data-index="1" data-chat-key="main-chat">
+      <div class="chat-sidebar">
+        <div class="rail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></div>
+        <div class="rail-icon active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <div class="rail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+        <div class="rail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg></div>
+        <div class="rail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6"/><path d="M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg></div>
+        <div class="rail-icon rail-icon-recents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg></div>
+        <div class="rail-spacer"></div>
+        <div class="rail-avatar">LS</div>
+      </div>
+
+      <div class="recents-flyout">
+        <div class="recents-header">
+          <span>Recents</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <ul class="recents-list">
+          <li>Free trial data tables for analysis</li>
+          <li>Sigma workbook and team usage t&hellip;</li>
+          <li>Free trial data tables in Sigma</li>
+          <li>Closed lost deals by sales rep</li>
+          <li>Daily form fill counts</li>
+        </ul>
+      </div>
+
+      <svg class="fake-cursor" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 3l14 8.5-6.2 1.4L10 20 5 3Z" fill="#171717" stroke="white" stroke-width="1"/>
+      </svg>
+
+      <div class="help-fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1.5 1-1.5 2.2"/><circle cx="12" cy="17" r="0.3" fill="currentColor"/></svg></div>
+
+      <div class="chat-main">
+        <div class="chat-topbar">
+          <span class="topbar-title">The SaaSpocalypse: How to Win in the Next Decade</span>
+        </div>
+
+        <div class="chat-live-area">
+        <div class="chat-stage">
+          <div class="chat-feed">
+
+            <div class="welcome-header">
+              <svg class="welcome-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <clipPath id="sparkleClip">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M28.231 11.6a6.357 6.357 0 0 1 0 8.8l-3.833 3.998-3.998 3.834a6.36 6.36 0 0 1-8.8 0l-3.998-3.834L3.769 20.4a6.36 6.36 0 0 1 0-8.8l3.833-3.998L11.6 3.769a6.36 6.36 0 0 1 8.8 0l3.998 3.833zm-3.583 5.292a1.004 1.004 0 0 0 0-1.784l-4.829-2.497a1 1 0 0 1-.43-.43l-2.497-4.83a1.004 1.004 0 0 0-1.785 0l-2.497 4.83a1 1 0 0 1-.43.43l-4.83 2.497a1.004 1.004 0 0 0 0 1.784l4.83 2.497c.184.095.335.246.43.43l2.497 4.83c.375.724 1.41.724 1.785 0l2.497-4.83c.095-.184.246-.335.43-.43z"/>
+                  </clipPath>
+                </defs>
+                <foreignObject width="32" height="32" clip-path="url(#sparkleClip)">
+                  <div xmlns="http://www.w3.org/1999/xhtml" style="width:100%; height:100%; background: conic-gradient(from 90deg, rgb(255,154,116) 0deg, rgb(206,224,0) 90deg, rgb(76,236,140) 180deg, rgb(168,232,243) 270deg, rgb(255,154,116) 360deg);"></div>
+                </foreignObject>
+              </svg>
+              <h2 class="welcome-title">Welcome, Luke</h2>
+            </div>
+
+            <div class="prompt-box" data-turn="0">
+              <div class="prompt-text"><span class="prompt-cursor"></span></div>
+              <div class="prompt-footer">
+                <div class="footer-left">
+                  <button class="followup-icon-btn add-source"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+                  <span class="input-chip">Sigma Assistant <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+                </div>
+                <div class="footer-right">
+                  <button class="followup-icon-btn mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 21v-4"/></svg></button>
+                  <div class="prompt-send">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 19V5M12 5L6 11M12 5L18 11" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="assistant-turn" data-turn="0">
+              <div class="assistant-body">
+                <div class="response-loading">
+                  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                </div>
+                <div class="response-content">
+                  <h2 class="response-title"></h2>
+                  <div class="response-desc"></div>
+                  <div class="response-actions">
+                    <button class="mini-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg></button>
+                    <button class="mini-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11M2 13v6a2 2 0 0 0 2 2h11.6a2 2 0 0 0 2-1.6l1.3-6a2 2 0 0 0-2-2.4H15V5a2 2 0 0 0-2-2l-2 6H7"/></svg></button>
+                    <button class="mini-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V3M22 11v6a2 2 0 0 1-2 2H8.4a2 2 0 0 1-2-1.6l-1.3-6a2 2 0 0 1 2-2.4H10V5a2 2 0 0 1 2-2l2 6h3"/></svg></button>
+                    <span class="response-timestamp">Just now</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prompt-box sent" data-turn="1">
+              <div class="prompt-text"></div>
+            </div>
+
+            <div class="assistant-turn" data-turn="1">
+              <div class="assistant-body">
+                <div class="response-loading">
+                  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                </div>
+                <div class="response-content">
+                  <p class="response-lead"></p>
+                  <ul class="response-list"></ul>
+                  <div class="response-cards"></div>
+                  <div class="response-actions">
+                    <button class="mini-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg></button>
+                    <button class="mini-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11M2 13v6a2 2 0 0 0 2 2h11.6a2 2 0 0 0 2-1.6l1.3-6a2 2 0 0 0-2-2.4H15V5a2 2 0 0 0-2-2l-2 6H7"/></svg></button>
+                    <button class="mini-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V3M22 11v6a2 2 0 0 1-2 2H8.4a2 2 0 0 1-2-1.6l-1.3-6a2 2 0 0 1 2-2.4H10V5a2 2 0 0 1 2-2l2 6h3"/></svg></button>
+                    <span class="response-timestamp">Just now</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prompt-box sent" data-turn="2">
+              <div class="prompt-text"></div>
+            </div>
+
+            <div class="assistant-turn" data-turn="2">
+              <div class="assistant-body">
+                <div class="response-loading">
+                  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                </div>
+                <div class="response-content">
+                  <p class="response-lead"></p>
+                  <ul class="response-list"></ul>
+                  <div class="response-groups"></div>
+                  <div class="response-actions">
+                    <button class="mini-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg></button>
+                    <button class="mini-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11M2 13v6a2 2 0 0 0 2 2h11.6a2 2 0 0 0 2-1.6l1.3-6a2 2 0 0 0-2-2.4H15V5a2 2 0 0 0-2-2l-2 6H7"/></svg></button>
+                    <button class="mini-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V3M22 11v6a2 2 0 0 1-2 2H8.4a2 2 0 0 1-2-1.6l-1.3-6a2 2 0 0 1 2-2.4H10V5a2 2 0 0 1 2-2l2 6h3"/></svg></button>
+                    <span class="response-timestamp">Just now</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="followup-bar">
+          <div class="followup-placeholder">
+            <span class="followup-live"></span><span class="followup-cursor"></span><span class="followup-static">Ask Sigma AI...</span>
+          </div>
+          <div class="followup-controls-row">
+            <div class="footer-left">
+              <button class="followup-icon-btn add-source"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+              <span class="input-chip">Sigma Assistant <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+            </div>
+            <div class="footer-right">
+              <button class="followup-icon-btn mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 21v-4"/></svg></button>
+              <div class="followup-send">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 19V5M12 5L6 11M12 5L18 11" stroke="#8C8C8C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="composer-disclaimer">AI can make mistakes. Please double-check responses.</p>
+        </div>
+
+        <div class="overlay-stage">
+          <div class="diagram-panel">
+            <p class="diagram-eyebrow">Before</p>
+            <div class="diagram-flow"></div>
+          </div>
+          <div class="video-panel">
+            <div class="video-frame">
+              <button class="video-play" type="button" aria-label="Play video (placeholder)">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7L8 5Z" fill="white"/></svg>
+              </button>
+            </div>
+            <p class="video-caption"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Additional <section class="slide" data-index="N"> slides go here -->
+
+    <button class="slide-nav-btn" id="slideNavBtn" type="button" aria-label="Jump to slide">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="progress" id="progress"></span>
+    </button>
+
+  </div>
+
+  <div class="nav-hint">&larr; back &nbsp;&nbsp;·&nbsp;&nbsp; space / &rarr; forward</div>
+
+  <div class="slide-nav-overlay" id="slideNavOverlay">
+    <div class="slide-nav-panel">
+      <div class="slide-nav-header">
+        <span>Jump to slide</span>
+        <button class="slide-nav-close" id="slideNavClose" type="button" aria-label="Close">&times;</button>
+      </div>
+      <div class="slide-nav-grid" id="slideNavGrid"></div>
+    </div>
+  </div>
+
+  <!-- Sigma's own icon set; the brand rules call for these over custom glyphs. -->
+  <script src="assets/icons/sigma-icons.js"></script>
+
+  <script>
+    (function () {
+      const titleSlide = document.querySelector('.slide-title');
+      const feudSlide = document.querySelector('.slide-feud');
+      const handsSlide = document.querySelector('.slide-hands');
+      const statementSlide = document.querySelector('.slide-statement');
+      const matrixSlide = document.querySelector('.slide-matrix');
+      const icebergSlide = document.querySelector('.slide-iceberg');
+      const takeawaysSlide = document.querySelector('.slide-takeaways');
+      const dividerSlide = document.querySelector('.slide-divider');
+
+      // One line per click. Everything so far stays on screen; only the newest
+      // holds full contrast. Shared by the show of hands and the takeaways.
+      function applyStackBuild(slide, stage) {
+        slide.querySelectorAll('.hands-q').forEach((q, i) => {
+          q.classList.toggle('shown', i <= stage);
+          q.classList.toggle('past', i < stage);
+        });
+      }
+
+      // Stage 0 holds the before row, 1 brings down the now row. The red ring
+      // is named per step rather than accumulated, so the table can come back
+      // later with nothing ringed and then flag a different cell.
+      function applyMatrixBuild(stage, ring) {
+        matrixSlide.classList.toggle('show-now', stage >= 1);
+        matrixSlide.querySelectorAll('.mx-cell[data-ring]').forEach(cell => {
+          cell.classList.toggle('ringed', cell.dataset.ring === ring);
+        });
+      }
+
+      // Stage 0 is just the tip; stage 1 surfaces everything under it.
+      function applyIcebergBuild(stage) {
+        icebergSlide.classList.toggle('show-depth', stage >= 1);
+      }
+
+      // Standalone slides that carry their own per-step build, the way the
+      // chat slide's beats do.
+      function applySlideBuild(step) {
+        if (step.slide === handsSlide) applyStackBuild(handsSlide, step.focus || 0);
+        else if (step.slide === takeawaysSlide) applyStackBuild(takeawaysSlide, step.focus || 0);
+        else if (step.slide === matrixSlide) applyMatrixBuild(step.focus || 0, step.ring);
+        else if (step.slide === icebergSlide) applyIcebergBuild(step.focus || 0);
+      }
+
+      // PLACEHOLDER copy — swap for the real top 5 off the top-10 list.
+      const FEUD = {
+        title: "Top 5 things on executives' minds",
+        // Sentence case per the brand rule; AI stays capitalised as an initialism.
+        answers: [
+          'AI slop',
+          'Showing the work of AI',
+          'Open weights vs closed models \u2192 cost',
+          'Building vs buying',
+          'Semantics & a strong data foundation'
+        ]
+      };
+      const FEUD_STRIKE_LIMIT = 3;
+
+      (function buildFeudBoard() {
+        feudSlide.querySelector('.feud-title').textContent = FEUD.title;
+
+        const slots = feudSlide.querySelector('.feud-slots');
+        FEUD.answers.forEach((answer, i) => {
+          const li = document.createElement('li');
+          li.className = 'feud-slot';
+          li.innerHTML =
+            '<div class="feud-flip">' +
+              '<div class="feud-face feud-front"><span>' + (i + 1) + '</span></div>' +
+              '<div class="feud-face feud-back">' +
+                '<span class="feud-rank">' + (i + 1) + '</span>' +
+                '<span class="feud-answer"></span>' +
+                '<span class="feud-leader"></span>' +
+              '</div>' +
+            '</div>';
+          li.querySelector('.feud-answer').textContent = answer;
+          // Toggle, so a mis-click is recoverable mid-game.
+          li.addEventListener('click', () => li.classList.toggle('revealed'));
+          slots.appendChild(li);
+        });
+
+        const strikes = feudSlide.querySelector('.feud-strikes');
+        const xRow = feudSlide.querySelector('.feud-x-row');
+        const flash = feudSlide.querySelector('.feud-flash');
+        for (let i = 0; i < FEUD_STRIKE_LIMIT; i++) {
+          const x = document.createElement('span');
+          x.className = 'feud-x';
+          x.innerHTML = '&#10007;';
+          xRow.appendChild(x);
+        }
+
+        const marks = () => Array.from(xRow.children);
+        const sync = () => strikes.classList.toggle('used', marks().some(m => m.classList.contains('on')));
+
+        feudSlide.querySelector('.feud-x-btn').addEventListener('click', () => {
+          const next = marks().find(m => !m.classList.contains('on'));
+          if (next) next.classList.add('on');
+          sync();
+          // Restart the animation even on consecutive clicks.
+          flash.classList.remove('show');
+          void flash.offsetWidth;
+          flash.classList.add('show');
+        });
+
+        feudSlide.querySelector('.feud-reset').addEventListener('click', () => {
+          marks().forEach(m => m.classList.remove('on'));
+          sync();
+        });
+      })();
+      const chatSlide = document.querySelector('.slide-chat');
+
+      // Each conversation turn is its own nav "frame." A new turn replaces the
+      // previous one (which slides off the top); the turn 2 response builds
+      // down one decision-group at a time across its own frames.
+      const CHAT_FRAMES = [
+        { turn: 0 },
+        { turn: 1 },
+        { turn: 2, groupCount: 0 },   // the four options, nothing chosen yet
+        { turn: 2, groupCount: 1 },
+        { turn: 2, groupCount: 2 },
+        { turn: 2, groupCount: 3 }
+      ];
+
+      // Before-state diagram + video content for each beat. A video with a
+      // `wistia` id embeds the real player; one without is still a placeholder.
+      const OVERLAYS = {
+        framework: {
+          diagramLayout: 'tree',
+          diagramTitle: 'What it actually takes',
+          diagram: {
+            root: 'Improve Business Performance',
+            hub: 'Decisions',
+            // The hub label grows on each click: Decisions → Trusted
+            // Decisions → Trusted, cost-effective decisions. The noun drops
+            // its capital once it's sat mid-phrase.
+            hubPrefix: 'Trusted',
+            hubPrefix2: ', cost-effective',
+            hubMidPhrase: 'decisions',
+            branches: [
+              { text: 'Better Decisions', icon: 'check-circle' },
+              { text: 'More Decisions', icon: 'team' },
+              { text: 'Faster Decisions', icon: 'lightning' }
+            ]
+          }
+        },
+        tradeoff: {
+          diagramLayout: 'seesaw',
+          diagramTitle: 'The constant battle',
+          diagram: {
+            left: ['Speed', 'Performance'],
+            right: ['Data volume', 'Completeness'],
+            fulcrum: 'Legacy systems'
+          }
+        },
+        better: {
+          diagramLayout: 'process',
+          diagramTitle: 'Better decisions came from the full picture',
+          diagram: {
+            base: { role: 'Data Engineer', did: 'captured the data' },
+            // The analytics path, ending in a human decision.
+            left: [
+              { role: 'Analytics Engineer', did: 'joined the sources' },
+              { role: 'Data Analyst', did: 'turned it into answers' },
+              { role: 'Subject Matter Expert', did: 'made the decision', outcome: true }
+            ],
+            // The other path off the same foundation, ending in automation.
+            right: { role: 'Data Scientist', did: 'automated it in production', outcome: true },
+            notes: [
+              { title: 'Technology that scales' },
+              { title: 'Trusted processes' }
+            ]
+          }
+        },
+        // Plays straight off the back of the iceberg.
+        wac: {
+          videos: [
+            { label: "Building Sigma Workbooks in Claude", wistia: "9a4vcg5hzy", ratio: "960 / 602" },
+            { label: "Building Sigma Workbook Applications in Claude", wistia: "z8obz0vhdw", ratio: "960 / 602" }
+          ]
+        },
+        // The two Epsilon recordings, played after WAC — this is the answer to
+        // the runtime layer the iceberg just showed.
+        futureapps: {
+          videos: [
+            { label: "Future of Applications at Work", wistia: "la39uguioc", ratio: "960 / 602",
+              rate: 2, muted: true, captions: true },
+            { label: "Future of Applications at Work Contd", wistia: "dym2f9ht5e", ratio: "960 / 624" }
+          ]
+        },
+        // Demos that used to sit inside Better Decisions. They now play against
+        // the matrix's "ad hoc analysis" column, between the two red rings.
+        adhoc: {
+          videos: [
+            { label: "Analyst in Sigma", wistia: "wr5qvsg2nh", ratio: "960 / 540", start: 38, rate: 2 },
+            { label: "Analyze via Claude", wistia: "r0dzeuj1i5", ratio: "960 / 602" }
+          ]
+        },
+        // The doom loop. Lives on its own so it can be placed in whichever
+        // section is telling that part of the story.
+        // Parallel imperatives so the three read as one set.
+        goals: {
+          diagramLayout: 'goals',
+          diagramTitle: 'The goal',
+          diagram: {
+            items: [
+              { icon: 'refresh', text: 'Let business experts\niterate' },
+              { icon: 'book', text: 'Make sure all the context\nis available' },
+              { icon: 'viz-gauge', text: 'Keep costs down\nand speed up' }
+            ],
+            prompt: 'Ask anything about your data'
+          }
+        },
+        doomloop: {
+          // Cycle order, starting at the data source and running counter-clockwise;
+          // the fifth entry is the exit from the loop, not part of it.
+          diagram: [
+            "Expert explores\nthe data",
+            "Expert identifies\na gap in the data",
+            "Ticket to the\ndata team submitted",
+            "Data team updates\nthe data source",
+            "Better decision made"
+          ],
+          diagramLayout: 'loop'
+        },
+        more: {
+          videos: [
+            { label: "Sigma Assistant — Build", wistia: "oqrugbfg98", ratio: "3428 / 2160" },
+            { label: "Claude Workbook + Agent", wistia: "3ty08dk026", ratio: "960 / 624" }
+          ]
+        },
+        faster: {
+          diagram: ["See it in a dashboard", "Swivel to another system", "Manually take action"]
+        },
+        // Follows the Agents ring on the table — the table names it, this
+        // shows one doing the work.
+        agents: {
+          videos: [
+            { label: "Configuring an agent in Sigma", image: "assets/images/configure-agent.webp",
+              ratio: "2000 / 1138" },
+            { label: "What is my role at Sigma", wistia: "9yfinwv11w", ratio: "960 / 602" }
+          ]
+        }
+      };
+
+      // After a section's bullets frame plays, the chat slides off for a
+      // before-state diagram, then one placeholder-video beat per demo, then
+      // the chat slides back on — resuming mid-conversation, not resetting.
+      // Every step carries `requiredFrame` — the chat frame that must be fully
+      // resolved before this step's visual (overlay or resumed chat) is safe
+      // to show. For frame steps that's just their own frameIndex; for overlay
+      // steps it's the frameIndex of the bullets they follow.
+      // How many clicks a diagram takes, and what each one is called. A loop is
+      // walked node by node; a stack is assembled layer by layer then annotated;
+      // anything else is a single reveal.
+      function diagramStages(section) {
+        const cfg = OVERLAYS[section];
+        if (cfg.diagramLayout === 'loop') {
+          return [{ focus: -1, label: 'Before (diagram)' }].concat(
+            cfg.diagram.map((nodeLabel, i) => ({ focus: i, label: String(nodeLabel).replace(/\n/g, ' ') })));
+        }
+        if (cfg.diagramLayout === 'goals') {
+          return [{ focus: 0, label: cfg.diagramTitle }, { focus: 1, label: 'Compressed into one prompt' }];
+        }
+        if (cfg.diagramLayout === 'process') {
+          const parts = processParts(cfg.diagram);
+          return parts.map((l, i) => ({ focus: i, label: l.role }))
+            .concat(cfg.diagram.notes.map((n, i) => ({ focus: parts.length + i, label: n.title })));
+        }
+        // Single-reveal diagrams take their own title as the step label.
+        return [{ focus: -1, label: cfg.diagramTitle || 'Before (diagram)' }];
+      }
+
+      function sectionBeats(frameIndex, section, sectionTitle, leadIns, thenDiagrams, closeWith) {
+        const beats = [{ slide: chatSlide, kind: 'frame', frameIndex, requiredFrame: frameIndex, label: sectionTitle + ' — Bullets' }];
+        (leadIns || []).forEach(key => {
+          beats.push({ slide: chatSlide, kind: 'overlay', overlay: 'diagram', section: key, requiredFrame: frameIndex,
+            label: sectionTitle + ' — ' + OVERLAYS[key].diagramTitle });
+        });
+        // A section's own diagram, then any borrowed ones, then its videos.
+        const borrowed = (key, title) => diagramStages(key).forEach(stage => {
+          beats.push({ slide: chatSlide, kind: 'overlay', overlay: 'diagram', section: key,
+            requiredFrame: frameIndex, focus: stage.focus, label: title + ' — ' + stage.label });
+        });
+        if (OVERLAYS[section].diagram) borrowed(section, sectionTitle);
+        (thenDiagrams || []).forEach(key => borrowed(key, sectionTitle));
+        (OVERLAYS[section].videos || []).forEach((video, videoIndex) => {
+          beats.push({ slide: chatSlide, kind: 'overlay', overlay: 'video', section, videoIndex, requiredFrame: frameIndex, label: sectionTitle + ' — ' + video.label });
+        });
+        // A section either hands back to the chat, or closes on a diagram.
+        if (closeWith) {
+          beats.push({ slide: chatSlide, kind: 'overlay', overlay: 'diagram', section: closeWith.section,
+            requiredFrame: frameIndex, focus: closeWith.focus, label: sectionTitle + ' — ' + closeWith.label });
+        } else {
+          beats.push({ slide: chatSlide, kind: 'frame', frameIndex, requiredFrame: frameIndex, label: sectionTitle + ' — Resume' });
+        }
+        return beats;
+      }
+
+      const STEPS = [
+        { slide: titleSlide, label: 'Title' },
+        { slide: chatSlide, kind: 'frame', frameIndex: 0, requiredFrame: 0, label: 'AI Slop Demo' },
+        { slide: chatSlide, kind: 'frame', frameIndex: 1, requiredFrame: 1, label: 'Facts & One Lie' },
+        // The lie isn't in the list — it's the claim that there's one at all.
+        { slide: chatSlide, kind: 'frame', frameIndex: 1, requiredFrame: 1, annotate: 'facts-lead', label: 'Facts & One Lie — The lie' },
+        { slide: statementSlide, label: 'Fundamentally changing' },
+        { slide: matrixSlide, focus: 0, label: 'Before AI' },
+        { slide: matrixSlide, focus: 1, label: 'Now' },
+        { slide: matrixSlide, focus: 1, ring: 'chat', label: 'Chat' },
+        // requiredFrame 1 keeps the conversation where the audience last saw
+        // it — the video covers it either way.
+        ...['Analyst in Sigma', 'Analyze via Claude'].map((label, videoIndex) => ({
+          slide: chatSlide, kind: 'overlay', overlay: 'video', section: 'adhoc',
+          videoIndex, requiredFrame: 1, label })),
+        // Back from the demos with a clean table, then the ring lands on
+        // vibe-coding alone — Chat's ring doesn't carry over.
+        { slide: matrixSlide, focus: 1, label: 'Table — no outline' },
+        { slide: matrixSlide, focus: 1, ring: 'vibe', label: 'Table — Vibe-coding' },
+        ...['Vibe-coded it', 'Shipped it', 'Secured it', 'Scaled to everyone'].map((label, focus) => ({
+          slide: handsSlide, focus, label: 'Show of hands — ' + label })),
+        // The iceberg lands after the show of hands: they've just admitted to
+        // shipping it, so this is the bill.
+        { slide: icebergSlide, focus: 0, label: 'Tip of the iceberg' },
+        { slide: icebergSlide, focus: 1, label: 'What you actually run' },
+        // requiredFrame 1 keeps the conversation where the audience last saw
+        // it — the video covers it either way.
+        ...['Building Sigma Workbooks in Claude', 'Building Sigma Workbook Applications in Claude']
+          .map((label, videoIndex) => ({
+          slide: chatSlide, kind: 'overlay', overlay: 'video', section: 'wac',
+          videoIndex, requiredFrame: 1, label })),
+        ...['Future of Applications at Work', 'Future of Applications at Work Contd']
+          .map((label, videoIndex) => ({
+            slide: chatSlide, kind: 'overlay', overlay: 'video', section: 'futureapps',
+            videoIndex, requiredFrame: 1, label })),
+        // The table returns clean, then the ring moves to automation.
+        { slide: matrixSlide, focus: 1, label: 'Table — back again' },
+        { slide: matrixSlide, focus: 1, ring: 'agents', label: 'Table — Agents' },
+        ...['Configuring an agent in Sigma', 'What is my role at Sigma']
+          .map((label, videoIndex) => ({
+            slide: chatSlide, kind: 'overlay', overlay: 'video', section: 'agents',
+            videoIndex, requiredFrame: 1, label })),
+        // One last clean pass of the table, then the framework it all rolls up
+        // into.
+        { slide: matrixSlide, focus: 1, label: 'Table — the full shift' },
+        ...['Performance', 'Performance → decisions', '→ better / more / faster', '→ trusted decisions',
+            '→ trusted, cost-effective decisions']
+          .map((label, build) => ({ slide: chatSlide, kind: 'overlay', overlay: 'diagram',
+            section: 'framework', requiredFrame: 2, focus: build, label: 'The point — ' + label })),
+
+        ...['Dashboards, apps and agents', 'The bill you keep paying', 'Governance underneath']
+          .map((label, focus) => ({ slide: takeawaysSlide, focus, label: 'Takeaway — ' + label })),
+        { slide: dividerSlide, label: 'Appendix' },
+        { slide: feudSlide, label: 'Top 5: Executive minds' },
+        { slide: chatSlide, kind: 'frame', frameIndex: 2, requiredFrame: 2, label: "What's the point of data" },
+        { slide: chatSlide, kind: 'frame', frameIndex: 2, requiredFrame: 2, pick: 3, label: 'The real answer' },
+        ...sectionBeats(3, 'better', 'Better Decisions', ['tradeoff'], ['doomloop', 'goals'],
+          // Closes on the fully-built framework tree rather than the chat.
+          { section: 'framework', focus: 4, label: 'Improve business performance' }),
+        ...sectionBeats(4, 'more', 'More Decisions'),
+        ...sectionBeats(5, 'faster', 'Faster Decisions')
+      ];
+      // Beats that are built but currently cut from the running order. Delete a
+      // line to bring one back — the generator and its content are untouched.
+      const RETIRED_STEPS = new Set([
+        'Better Decisions — Bullets',
+        'Better Decisions — The constant battle'
+      ]);
+      const RUNNING_STEPS = STEPS.filter(step => !RETIRED_STEPS.has(step.label));
+      const DISTINCT_SLIDES = Array.from(new Set(RUNNING_STEPS.map(s => s.slide)));
+
+      const CHAT_TURNS = [
+        {
+          prompt: "Create a session title and description that will clearly show as AI Slop and focus on the doom and gloom of AI... oh and also give an overview of me",
+          responseTitle: "The SaaSpocalypse: How to Win in the Next Decade",
+          responseDesc: [
+            "The Economist called it the SaaSpocalypse because AI made it cheaper to build what enterprises used to buy—and your people are already doing it—building shadow apps and agents with unapproved AI tools. You've got a chance to get ahead of the mess before it gets out of control.",
+            "Join Sigma's Head of Marketing and former Data Scientist, Luke Stanke, to learn how Sigma is bringing all of your analytics, business applications, and agents under into one place where the outputs can be fully governed by IT."
+          ]
+        },
+        {
+          prompt: "Give facts and one lie about Luke.",
+          responseLead: "Here are five facts and a lie about Luke:",
+          responseCards: [
+            { title: "Started his career as a teacher" },
+            { title: "PhD in Educational Psychology", detail: "quantitative measurement in education" },
+            { title: "Data scientist for Minneapolis Public Schools", detail: "supporting headteachers" },
+            { title: "Founded and sold a BI consultancy", detail: "Amazon, Salesforce, Coca-Cola, Walmart, Mars, P&G…" },
+            { title: "Leads marketing at Sigma", detail: "title technically still “Product Evangelist”" }
+          ]
+        },
+        {
+          prompt: "What's the point of data in the companies we work for?",
+          responseLead: "A few different answers to that:",
+          responseList: [
+            "To collect and store information",
+            "To build dashboards and reports",
+            "To have a single source of truth",
+            "To improve business performance"
+          ],
+          // Once the options have done their job they give way to the branch
+          // detail, so the rejected answers don't crowd the rest of the talk.
+          responseGroupsLead: "Improving business performance comes down to three things:",
+          responseGroups: [
+            {
+              label: "Better decisions",
+              items: [
+                "Working with complete data",
+                "Consistent metrics across teams",
+                "Not just aggregations"
+              ]
+            },
+            {
+              label: "More decisions",
+              items: [
+                "Make data more accessible",
+                "Make data easier to use"
+              ]
+            },
+            {
+              label: "Faster decisions",
+              items: [
+                "Compress the decision-making process"
+              ]
+            }
+          ]
+        }
+      ];
+
+      // --- chat slide element refs (only one chat slide exists) ---
+      const promptBoxes = [0, 1, 2].map(n => chatSlide.querySelector('.prompt-box[data-turn="' + n + '"]'));
+      const assistantTurns = [0, 1, 2].map(n => chatSlide.querySelector('.assistant-turn[data-turn="' + n + '"]'));
+      const followupBar = chatSlide.querySelector('.followup-bar');
+      const followupLive = chatSlide.querySelector('.followup-live');
+      const followupCursor = chatSlide.querySelector('.followup-cursor');
+      const followupStatic = chatSlide.querySelector('.followup-static');
+      const welcomeHeader = chatSlide.querySelector('.welcome-header');
+      const chatLiveArea = chatSlide.querySelector('.chat-live-area');
+      const overlayStage = chatSlide.querySelector('.overlay-stage');
+      const diagramPanel = chatSlide.querySelector('.diagram-panel');
+      const diagramFlow = chatSlide.querySelector('.diagram-flow');
+      const diagramEyebrow = chatSlide.querySelector('.diagram-eyebrow');
+      const videoPanel = chatSlide.querySelector('.video-panel');
+      const videoFrame = chatSlide.querySelector('.video-frame');
+      const videoCaption = chatSlide.querySelector('.video-caption');
+      const VIDEO_PLACEHOLDER = videoFrame.innerHTML;
+      const railIconRecents = chatSlide.querySelector('.rail-icon-recents');
+      const recentsFlyout = chatSlide.querySelector('.recents-flyout');
+      const recentsList = chatSlide.querySelector('.recents-list');
+      const fakeCursor = chatSlide.querySelector('.fake-cursor');
+      const followupSend = chatSlide.querySelector('.followup-send');
+
+      const SECTION_LABELS = {
+        framework: 'Performance → trusted decisions',
+        doomloop: 'The doom loop',
+        goals: 'The goal',
+        tradeoff: 'Speed vs. completeness',
+        better: 'Better Decisions — Before',
+        more: 'More Decisions — Before',
+        faster: 'Faster Decisions — Before'
+      };
+
+      let current = 0;
+      let chatShownFrame = -1;  // index into CHAT_FRAMES currently fully rendered (-1 = none)
+      let chatSuspended = false; // true while a standalone slide is showing
+      let chatEntered = false;  // has resetChat() run for this visit to the chat slide
+      let chatAnimating = false; // a frame transition is currently in flight
+      let desiredFrame = -1;    // latest frame index requested by nav (may be ahead of chatShownFrame)
+      let pendingStep = null;   // the STEPS entry whose visual should apply once caught up
+      let appliedStepIndex = -1; // `current` value the pending visual was last applied for
+      let promptTimers = [];
+
+      function clearPromptTimers() {
+        promptTimers.forEach(id => { clearInterval(id); clearTimeout(id); });
+        promptTimers = [];
+      }
+
+      function reveal(el) {
+        el.classList.remove('exiting');
+        el.style.display = 'flex';
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+      }
+
+      function hideInstant(el) {
+        el.classList.remove('visible', 'exiting');
+        el.style.display = 'none';
+      }
+
+      function streamWords(el, text, wordDelay, onDone) {
+        const words = text.split(' ');
+        const cursor = document.createElement('span');
+        cursor.className = 'stream-cursor';
+        el.textContent = '';
+        el.appendChild(cursor);
+
+        let i = 0;
+        const wordTimer = setInterval(() => {
+          cursor.insertAdjacentText('beforebegin', (i === 0 ? '' : ' ') + words[i]);
+          i++;
+          if (i >= words.length) {
+            clearInterval(wordTimer);
+            cursor.remove();
+            if (onDone) onDone();
+          }
+        }, wordDelay);
+        promptTimers.push(wordTimer);
+      }
+
+      function streamParagraphs(containerEl, paragraphs, wordDelay, onDone) {
+        containerEl.innerHTML = '';
+        let i = 0;
+        function nextParagraph() {
+          if (i >= paragraphs.length) { if (onDone) onDone(); return; }
+          const p = document.createElement('p');
+          containerEl.appendChild(p);
+          streamWords(p, paragraphs[i], wordDelay, () => {
+            i++;
+            nextParagraph();
+          });
+        }
+        nextParagraph();
+      }
+
+      function revealList(ulEl, items, itemDelay, onDone) {
+        ulEl.innerHTML = '';
+        items.forEach((text, i) => {
+          const li = document.createElement('li');
+          li.textContent = text;
+          ulEl.appendChild(li);
+          const t = setTimeout(() => {
+            li.classList.add('visible');
+            if (i === items.length - 1 && onDone) onDone();
+          }, 200 + i * itemDelay);
+          promptTimers.push(t);
+        });
+      }
+
+      function buildFactFlag(card) {
+        const el = document.createElement('div');
+        el.className = 'response-card';
+        const flag = document.createElement('div');
+        flag.className = 'fact-flag';
+        const title = document.createElement('div');
+        title.className = 'response-card-title';
+        title.textContent = card.title;
+        flag.appendChild(title);
+        if (card.detail) {
+          const detail = document.createElement('div');
+          detail.className = 'response-card-detail';
+          detail.textContent = card.detail;
+          flag.appendChild(detail);
+        }
+        el.appendChild(flag);
+        const stem = document.createElement('span');
+        stem.className = 'fact-stem';
+        const tick = document.createElement('span');
+        tick.className = 'fact-tick';
+        el.appendChild(stem);
+        el.appendChild(tick);
+        return el;
+      }
+
+      function revealCards(containerEl, cards, itemDelay, onDone) {
+        containerEl.innerHTML = '';
+        cards.forEach((card, i) => {
+          const el = buildFactFlag(card);
+          containerEl.appendChild(el);
+          const t = setTimeout(() => {
+            el.classList.add('visible');
+            if (i === cards.length - 1 && onDone) onDone();
+          }, 200 + i * itemDelay);
+          promptTimers.push(t);
+        });
+      }
+
+      function revealOneGroup(containerEl, group, onDone) {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'response-group';
+        const labelEl = document.createElement('div');
+        labelEl.className = 'response-group-label';
+        labelEl.textContent = group.label;
+        const listEl = document.createElement('ul');
+        listEl.className = 'response-sublist';
+        groupEl.appendChild(labelEl);
+        groupEl.appendChild(listEl);
+        containerEl.appendChild(groupEl);
+
+        const revealDelay = setTimeout(() => {
+          groupEl.classList.add('visible');
+          revealList(listEl, group.items, 180, onDone);
+        }, 150);
+        promptTimers.push(revealDelay);
+      }
+
+      function revealGroups(containerEl, groups, onDone) {
+        containerEl.innerHTML = '';
+        let g = 0;
+        function nextGroup() {
+          if (g >= groups.length) { if (onDone) onDone(); return; }
+          revealOneGroup(containerEl, groups[g], () => {
+            g++;
+            const nextDelay = setTimeout(nextGroup, 250);
+            promptTimers.push(nextDelay);
+          });
+        }
+        nextGroup();
+      }
+
+      // The prompt used to blink for five cycles before typing. It now types
+      // straight away — point the call site back at `blinkThenType` to bring
+      // the pause back.
+      function startTyping(cursorEl, onDone) { onDone(); }
+
+      function blinkThenType(cursorEl, onDone) {
+        let blinks = 0;
+        const blinkTimer = setInterval(() => {
+          cursorEl.style.visibility = (cursorEl.style.visibility === 'hidden') ? 'visible' : 'hidden';
+          blinks++;
+          if (blinks >= 10) { // 5 full on/off cycles
+            clearInterval(blinkTimer);
+            cursorEl.style.visibility = 'visible';
+            onDone();
+          }
+        }, 450);
+        promptTimers.push(blinkTimer);
+      }
+
+      function typeBeforeCursor(cursorEl, text, onDone) {
+        let i = 0;
+        const typeTimer = setInterval(() => {
+          cursorEl.insertAdjacentText('beforebegin', text[i]);
+          i++;
+          if (i >= text.length) {
+            clearInterval(typeTimer);
+            onDone();
+          }
+        }, 28);
+        promptTimers.push(typeTimer);
+      }
+
+      function typeAppend(el, text, onDone) {
+        let i = 0;
+        const typeTimer = setInterval(() => {
+          el.textContent += text[i];
+          i++;
+          if (i >= text.length) {
+            clearInterval(typeTimer);
+            onDone();
+          }
+        }, 28);
+        promptTimers.push(typeTimer);
+      }
+
+      function respondAssistant(assistantTurn, turnConfig, onDone, maxGroups) {
+        const loadingEl = assistantTurn.querySelector('.response-loading');
+        const contentEl = assistantTurn.querySelector('.response-content');
+        const titleEl = assistantTurn.querySelector('.response-title');
+        const descEl = assistantTurn.querySelector('.response-desc');
+        const leadEl = assistantTurn.querySelector('.response-lead');
+        const listEl = assistantTurn.querySelector('.response-list');
+        const groupsEl = assistantTurn.querySelector('.response-groups');
+        const cardsEl = assistantTurn.querySelector('.response-cards');
+
+        const thinkDelay = setTimeout(() => {
+          reveal(assistantTurn);
+
+          const loadingDelay = setTimeout(() => {
+            loadingEl.style.display = 'none';
+            contentEl.classList.add('visible');
+
+            if (turnConfig.responseGroups && groupCountOf(turnConfig, maxGroups) > 0) {
+              const groupsToShow = turnConfig.responseGroups.slice(0, groupCountOf(turnConfig, maxGroups));
+              if (listEl) listEl.innerHTML = '';
+              streamWords(leadEl, turnConfig.responseGroupsLead || turnConfig.responseLead, 60, () => {
+                revealGroups(groupsEl, groupsToShow, onDone);
+              });
+            } else if (turnConfig.responseCards) {
+              streamWords(leadEl, turnConfig.responseLead, 60, () => {
+                revealCards(cardsEl, turnConfig.responseCards, 220, onDone);
+              });
+            } else if (turnConfig.responseList) {
+              if (groupsEl) groupsEl.innerHTML = '';
+              streamWords(leadEl, turnConfig.responseLead, 60, () => {
+                revealList(listEl, turnConfig.responseList, 260, onDone);
+              });
+            } else {
+              const descParagraphs = Array.isArray(turnConfig.responseDesc) ? turnConfig.responseDesc : [turnConfig.responseDesc];
+              streamWords(titleEl, turnConfig.responseTitle, 95, () => {
+                streamParagraphs(descEl, descParagraphs, 42, onDone);
+              });
+            }
+          }, 1100);
+          promptTimers.push(loadingDelay);
+        }, 400);
+        promptTimers.push(thinkDelay);
+      }
+
+      // `||` would turn an explicit 0 into "show everything", so the absent
+      // case has to be tested separately.
+      function groupCountOf(turnConfig, requested) {
+        if (typeof requested === 'number') return requested;
+        return turnConfig.responseGroups ? turnConfig.responseGroups.length : 0;
+      }
+
+      function resetTurnDom(n) {
+        const promptBox = promptBoxes[n];
+        const assistantTurn = assistantTurns[n];
+
+        if (n === 0) {
+          promptBox.classList.remove('sent', 'exiting');
+          promptBox.style.display = 'flex';
+          welcomeHeader.classList.remove('hidden');
+          const textEl = promptBox.querySelector('.prompt-text');
+          // An instant render writes plain text into .prompt-text, which drops
+          // the caret node — rebuild it rather than re-appending nothing.
+          let cursorEl = promptBox.querySelector('.prompt-cursor');
+          if (!cursorEl) {
+            cursorEl = document.createElement('span');
+            cursorEl.className = 'prompt-cursor';
+          }
+          textEl.textContent = '';
+          textEl.appendChild(cursorEl);
+          cursorEl.style.visibility = 'hidden';
+          promptBox.querySelector('.prompt-send').classList.remove('ready');
+        } else {
+          hideInstant(promptBox);
+          promptBox.querySelector('.prompt-text').textContent = '';
+        }
+
+        hideInstant(assistantTurn);
+        assistantTurn.querySelector('.response-content').classList.remove('visible');
+        assistantTurn.querySelector('.response-loading').style.display = 'flex';
+        ['response-title', 'response-desc', 'response-lead'].forEach(cls => {
+          const el = assistantTurn.querySelector('.' + cls);
+          if (el) el.textContent = '';
+        });
+        const listEl = assistantTurn.querySelector('.response-list');
+        if (listEl) listEl.innerHTML = '';
+        const cardsReset = assistantTurn.querySelector('.response-cards');
+        if (cardsReset) cardsReset.innerHTML = '';
+        const groupsEl = assistantTurn.querySelector('.response-groups');
+        if (groupsEl) groupsEl.innerHTML = '';
+      }
+
+      function resetFollowup() {
+        followupBar.classList.remove('visible');
+        followupLive.textContent = '';
+        followupStatic.style.display = '';
+        followupCursor.style.visibility = 'visible';
+      }
+
+      function resetChat() {
+        clearPromptTimers();
+        [0, 1, 2].forEach(resetTurnDom);
+        resetFollowup();
+        chatShownFrame = -1;
+        chatAnimating = false;
+      }
+
+      // Exits the currently-shown turn (slides it off the top) then plays the
+      // entrance + response for `newTurn`, revealing only `groupCount` decision
+      // groups if this is turn 2's response.
+      function transitionToTurn(newTurn, oldTurn, groupCount, onDone) {
+        function enterNewTurn() {
+          resetTurnDom(newTurn);
+          const promptBox = promptBoxes[newTurn];
+          const assistantTurn = assistantTurns[newTurn];
+          const turnConfig = CHAT_TURNS[newTurn];
+
+          if (newTurn === 0) {
+            const textEl = promptBox.querySelector('.prompt-text');
+            const cursorEl = promptBox.querySelector('.prompt-cursor');
+            const sendEl = promptBox.querySelector('.prompt-send');
+            cursorEl.style.visibility = 'visible';
+
+            startTyping(cursorEl, () => {
+              typeBeforeCursor(cursorEl, turnConfig.prompt, () => {
+                sendEl.classList.add('ready');
+                const sendDelay = setTimeout(() => {
+                  cursorEl.style.visibility = 'hidden';
+                  sendEl.classList.remove('ready');
+                  promptBox.classList.add('sent');
+                  welcomeHeader.classList.add('hidden');
+
+                  respondAssistant(assistantTurn, turnConfig, () => {
+                    const followupDelay = setTimeout(() => {
+                      followupBar.classList.add('visible');
+                      onDone();
+                    }, 500);
+                    promptTimers.push(followupDelay);
+                  }, groupCount);
+                }, 700);
+                promptTimers.push(sendDelay);
+              });
+            });
+          } else {
+            const promptText = promptBox.querySelector('.prompt-text');
+            const startDelay = setTimeout(() => {
+              followupStatic.style.display = 'none';
+              followupCursor.style.visibility = 'visible';
+              typeAppend(followupLive, turnConfig.prompt, () => {
+                const sendDelay = setTimeout(() => {
+                  promptText.textContent = turnConfig.prompt;
+                  reveal(promptBox);
+                  followupLive.textContent = '';
+                  followupStatic.style.display = '';
+
+                  respondAssistant(assistantTurn, turnConfig, onDone, groupCount);
+                }, 700);
+                promptTimers.push(sendDelay);
+              });
+            }, 400);
+            promptTimers.push(startDelay);
+          }
+        }
+
+        if (oldTurn === null) { enterNewTurn(); return; }
+
+        const oldPromptBox = promptBoxes[oldTurn];
+        const oldAssistantTurn = assistantTurns[oldTurn];
+        oldPromptBox.classList.remove('visible');
+        oldAssistantTurn.classList.remove('visible');
+        oldPromptBox.classList.add('exiting');
+        oldAssistantTurn.classList.add('exiting');
+
+        const exitDelay = setTimeout(() => {
+          hideInstant(oldPromptBox);
+          hideInstant(oldAssistantTurn);
+          oldPromptBox.classList.remove('exiting');
+          oldAssistantTurn.classList.remove('exiting');
+          enterNewTurn();
+        }, 420);
+        promptTimers.push(exitDelay);
+      }
+
+      // Advances exactly one frame, then re-checks `desiredFrame` — so a nav
+      // key pressed mid-animation just extends the in-flight sequence instead
+      // of being missed or (worse) forcing a full reset back to frame 0.
+      function reconcile() {
+        if (chatAnimating) return;
+
+        if (desiredFrame > chatShownFrame) {
+          // Each beat animates exactly one turn. If we've landed several frames
+          // ahead — a grid jump, or a standalone slide in between — snap
+          // everything before the target so earlier turns don't replay.
+          if (desiredFrame > chatShownFrame + 1) {
+            snapChatToFrame(desiredFrame - 1);
+            chatShownFrame = desiredFrame - 1;
+          }
+          chatAnimating = true;
+          const i = chatShownFrame + 1;
+          const frame = CHAT_FRAMES[i];
+          const prevFrame = i > 0 ? CHAT_FRAMES[i - 1] : null;
+          const onStepDone = () => {
+            chatShownFrame = i;
+            chatAnimating = false;
+            reconcile();
+          };
+
+          if (!prevFrame || prevFrame.turn !== frame.turn) {
+            transitionToTurn(frame.turn, prevFrame ? prevFrame.turn : null, frame.groupCount, onStepDone);
+          } else {
+            const assistantTurn = assistantTurns[frame.turn];
+            const groupsEl = assistantTurn.querySelector('.response-groups');
+            const group = CHAT_TURNS[frame.turn].responseGroups[frame.groupCount - 1];
+            revealOneGroup(groupsEl, group, onStepDone);
+          }
+        } else if (desiredFrame < chatShownFrame) {
+          revertFramesTo(desiredFrame);
+          applyPendingStepVisual();
+        } else {
+          applyPendingStepVisual();
+        }
+      }
+
+      // Only shows/hides the overlay once the chat has actually caught up to
+      // the frame this step depends on — prevents an overlay from flashing in
+      // while an earlier turn is still mid-animation underneath it.
+      // Marks one option as the answer and recedes the rest. Undefined clears it.
+      function applyOptionPick(pick) {
+        const items = chatSlide.querySelectorAll('.assistant-turn[data-turn="2"] .response-list li');
+        items.forEach((li, i) => {
+          li.classList.toggle('picked', pick !== undefined && i === pick);
+          li.classList.toggle('muted', pick !== undefined && i !== pick);
+        });
+      }
+
+      // One wobbly ellipse with an overshoot tail, drawn on a 200x100 box and
+      // stretched to whatever it's ringing. non-scaling-stroke keeps the line
+      // an even weight however far it stretches.
+      const RING_SVG =
+        '<svg viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden="true">' +
+          '<path pathLength="1" vector-effect="non-scaling-stroke" ' +
+            'd="M106 6C62 2 14 14 8 44c-5 30 44 52 96 51 52-1 90-17 89-47-1-28-45-43-95-41-24 1-44 5-58 13"/>' +
+        '</svg>';
+
+      // What each step's `annotate` key points at. Resolved late so the target
+      // only has to exist when the step is actually reached.
+      const RING_TARGETS = {
+        'facts-lead': () => assistantTurns[1].querySelector('.response-lead')
+      };
+
+      let shownRing = null;
+      let ringTarget = null;
+      let ringWatcher = null;
+
+      // Sizes the ring around the target's text. Separate from creating it, so
+      // a re-measure never restarts the draw-on animation.
+      function positionRing(target) {
+        const ring = chatLiveArea.querySelector('.annotate-ring');
+        if (!ring || !target) return;
+
+        const range = document.createRange();
+        range.selectNodeContents(target);
+        const r = range.getBoundingClientRect();
+        const host = chatLiveArea.getBoundingClientRect();
+        if (!r.width || !host.width) return;
+
+        // Proportional padding, so the ellipse clears the text's corners
+        // whether it's two words or a full line.
+        const padX = Math.max(0.8 * r.height, 0.17 * r.width);
+        const padY = 0.6 * r.height;
+        ring.style.left = (r.left - host.left - padX) + 'px';
+        ring.style.top = (r.top - host.top - padY) + 'px';
+        ring.style.width = (r.width + padX * 2) + 'px';
+        ring.style.height = (r.height + padY * 2) + 'px';
+      }
+
+      // Rings a line of the conversation in red. Undefined clears it.
+      // The box comes from the text itself, not the element, so a full-width
+      // paragraph gets a ring around its sentence rather than its column.
+      function applyRingAnnotation(key) {
+        shownRing = key || null;
+        if (ringWatcher) { ringWatcher.disconnect(); ringWatcher = null; }
+        chatLiveArea.querySelectorAll('.annotate-ring').forEach(el => el.remove());
+        ringTarget = key && RING_TARGETS[key] ? RING_TARGETS[key]() : null;
+        if (!ringTarget) return;
+
+        const ring = document.createElement('div');
+        ring.className = 'annotate-ring';
+        ring.innerHTML = RING_SVG;
+        chatLiveArea.appendChild(ring);
+        positionRing(ringTarget);
+
+        // The line streams in word by word. Arrive on this beat before it has
+        // finished and the ring would size itself to half a sentence and stay
+        // that way — so follow the text until it settles.
+        ringWatcher = new MutationObserver(() => positionRing(ringTarget));
+        ringWatcher.observe(ringTarget, { childList: true, characterData: true, subtree: true });
+      }
+
+      // The box is measured in pixels, so anything else that reflows the text
+      // has to re-measure it too — a resize, or the webfont landing after a
+      // deep link rendered the line in the fallback face.
+      window.addEventListener('resize', () => positionRing(ringTarget));
+      if (document.fonts) {
+        document.fonts.ready.then(() => positionRing(ringTarget));
+      }
+
+      function applyPendingStepVisual() {
+        if (!pendingStep || appliedStepIndex === current) return;
+        appliedStepIndex = current;
+        applyOptionPick(pendingStep.pick);
+        applyRingAnnotation(pendingStep.annotate);
+        if (pendingStep.kind === 'overlay') {
+          showOverlay(pendingStep.overlay, pendingStep.section, pendingStep.videoIndex, pendingStep.focus);
+        } else if (overlayStage.classList.contains('visible')) {
+          playRecentsReturn(hideOverlay);
+        } else {
+          hideOverlay();
+        }
+      }
+
+      // Instantly (no animation) renders a frame fully resolved — used when
+      // jumping backward to a turn that had already been hidden.
+      function instantRenderFrame(frame) {
+        const turn = frame.turn;
+        const turnConfig = CHAT_TURNS[turn];
+        const promptBox = promptBoxes[turn];
+        const assistantTurn = assistantTurns[turn];
+
+        const textEl = promptBox.querySelector('.prompt-text');
+        textEl.textContent = turnConfig.prompt;
+        if (turn === 0) {
+          promptBox.classList.add('sent');
+          welcomeHeader.classList.add('hidden');
+        }
+        promptBox.classList.remove('exiting');
+        promptBox.style.display = 'flex';
+        promptBox.classList.add('visible');
+
+        assistantTurn.classList.remove('exiting');
+        assistantTurn.style.display = 'flex';
+        assistantTurn.classList.add('visible');
+        assistantTurn.querySelector('.response-loading').style.display = 'none';
+        assistantTurn.querySelector('.response-content').classList.add('visible');
+
+        if (turnConfig.responseGroups && groupCountOf(turnConfig, frame.groupCount) > 0) {
+          assistantTurn.querySelector('.response-lead').textContent =
+            turnConfig.responseGroupsLead || turnConfig.responseLead;
+          const staleList = assistantTurn.querySelector('.response-list');
+          if (staleList) staleList.innerHTML = '';
+          const groupsEl = assistantTurn.querySelector('.response-groups');
+          groupsEl.innerHTML = '';
+          const count = groupCountOf(turnConfig, frame.groupCount);
+          turnConfig.responseGroups.slice(0, count).forEach(group => {
+            const groupEl = document.createElement('div');
+            groupEl.className = 'response-group visible';
+            const labelEl = document.createElement('div');
+            labelEl.className = 'response-group-label';
+            labelEl.textContent = group.label;
+            const listEl = document.createElement('ul');
+            listEl.className = 'response-sublist';
+            group.items.forEach(text => {
+              const li = document.createElement('li');
+              li.className = 'visible';
+              li.textContent = text;
+              listEl.appendChild(li);
+            });
+            groupEl.appendChild(labelEl);
+            groupEl.appendChild(listEl);
+            groupsEl.appendChild(groupEl);
+          });
+        } else if (turnConfig.responseCards) {
+          assistantTurn.querySelector('.response-lead').textContent = turnConfig.responseLead;
+          const cardsEl = assistantTurn.querySelector('.response-cards');
+          cardsEl.innerHTML = '';
+          turnConfig.responseCards.forEach(card => {
+            const el = buildFactFlag(card);
+            el.classList.add('visible');
+            cardsEl.appendChild(el);
+          });
+        } else if (turnConfig.responseList) {
+          assistantTurn.querySelector('.response-lead').textContent = turnConfig.responseLead;
+          const staleGroups = assistantTurn.querySelector('.response-groups');
+          if (staleGroups) staleGroups.innerHTML = '';
+          const listEl = assistantTurn.querySelector('.response-list');
+          listEl.innerHTML = '';
+          turnConfig.responseList.forEach(text => {
+            const li = document.createElement('li');
+            li.className = 'visible';
+            li.textContent = text;
+            listEl.appendChild(li);
+          });
+        } else {
+          assistantTurn.querySelector('.response-title').textContent = turnConfig.responseTitle;
+          const descEl = assistantTurn.querySelector('.response-desc');
+          descEl.innerHTML = '';
+          const descParagraphs = Array.isArray(turnConfig.responseDesc) ? turnConfig.responseDesc : [turnConfig.responseDesc];
+          descParagraphs.forEach(text => {
+            const p = document.createElement('p');
+            p.textContent = text;
+            descEl.appendChild(p);
+          });
+        }
+
+        followupBar.classList.add('visible');
+        followupLive.textContent = '';
+        followupStatic.style.display = '';
+        followupCursor.style.visibility = 'visible';
+      }
+
+      function revertFramesTo(target) {
+        clearPromptTimers();
+        for (let i = chatShownFrame; i > target; i--) {
+          const frame = CHAT_FRAMES[i];
+          const prevFrame = i > 0 ? CHAT_FRAMES[i - 1] : null;
+          if (!prevFrame || prevFrame.turn !== frame.turn) {
+            resetTurnDom(frame.turn);
+          } else {
+            const assistantTurn = assistantTurns[frame.turn];
+            const groupsEl = assistantTurn.querySelector('.response-groups');
+            if (groupsEl && groupsEl.lastElementChild) groupsEl.removeChild(groupsEl.lastElementChild);
+          }
+        }
+        chatShownFrame = target;
+        if (target >= 0) {
+          instantRenderFrame(CHAT_FRAMES[target]);
+        } else {
+          resetFollowup();
+        }
+      }
+
+      // playbackRate rather than animation-duration: changing the duration of a
+      // running animation makes it jump, while the rate scales it in place.
+      function applyLoopFocus(focus) {
+        const svg = diagramFlow.querySelector('.loop-svg');
+        if (!svg) return;
+        const active = typeof focus === 'number' && focus >= 0;
+        svg.querySelectorAll('.loop-node').forEach((n, i) =>
+          n.classList.toggle('is-focus', active && i === focus));
+
+        const core = diagramFlow.querySelector('.loop-core');
+        if (core) {
+          const rate = 1 + Math.max((focus || 0) + (active ? 1 : 0), 0) * 0.85;
+          core.getAnimations().forEach(a => { a.playbackRate = rate; });
+        }
+      }
+
+      function buildDiagram(steps, layout, callout) {
+        const isSvg = layout === 'loop' || layout === 'seesaw' || layout === 'tree' || layout === 'process' || layout === 'goals';
+        diagramFlow.classList.toggle('svg-mode', isSvg);
+        diagramPanel.classList.toggle('fill-panel', isSvg);
+        if (layout === 'loop') {
+          buildLoopDiagram(steps, callout);
+        } else if (layout === 'seesaw') {
+          buildSeesawDiagram(steps);
+        } else if (layout === 'tree') {
+          buildTreeDiagram(steps);
+        } else if (layout === 'process') {
+          buildProcessDiagram(steps);
+        } else if (layout === 'goals') {
+          buildGoalsDiagram(steps);
+        } else {
+          buildLinearDiagram(steps);
+        }
+      }
+
+      // A lever that never settles: speed on one side, completeness on the
+      // other, legacy systems as the fulcrum they both pivot on. Geometry is
+      // built around the pivot at (450, 248) so the CSS rotation matches.
+      const SEESAW_ICONS = {
+        speed: '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>',
+        data: '<ellipse cx="12" cy="6" rx="7.5" ry="3"/>' +
+              '<path d="M4.5 6v12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6"/>' +
+              '<path d="M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3"/>'
+      };
+
+      // Three parallel aims that then converge on a single prompt — which is how
+      // experts want to compress the whole process. Laid out on a 900x470 grid.
+      const GOALS = { y: 26, h: 132, w: 272, gap: 20, busY: 232, boxY: 300, boxH: 92, boxW: 430 };
+
+      function buildGoalsDiagram(cfg) {
+        const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const G = GOALS, n = cfg.items.length;
+        const total = n * G.w + (n - 1) * G.gap;
+        const left = (900 - total) / 2;
+        const cxOf = i => left + i * (G.w + G.gap) + G.w / 2;
+        const icon = name => (window.SigmaIcons && SigmaIcons.has(name))
+          ? SigmaIcons.svg(name, { size: 30, color: 'currentColor' }) : '';
+
+        // Card: one Sigma icon, then the aim, sat on the card's floor. The
+        // label is HTML in a foreignObject rather than <text> so the browser
+        // wraps it inside the card's padding — a hand-placed break ran past
+        // the card edge as soon as the copy changed.
+        const cards = cfg.items.map((item, i) => {
+          const x = left + i * (G.w + G.gap);
+          const label = String(item.text).replace(/\n/g, ' ');
+          return '<rect class="goals-card" x="' + x + '" y="' + G.y + '" width="' + G.w +
+              '" height="' + G.h + '" rx="12"/>' +
+            '<g class="goals-icon" transform="translate(' + (x + 22) + ' ' + (G.y + 22) + ')">' +
+              icon(item.icon) + '</g>' +
+            '<foreignObject x="' + (x + 22) + '" y="' + (G.y + 56) + '" width="' + (G.w - 44) +
+              '" height="' + (G.h - 70) + '">' +
+              '<div class="goals-label">' + esc(label) + '</div>' +
+            '</foreignObject>';
+        }).join('');
+
+        // Converging bus: each card drops to a shared line, then one stem down.
+        const r = 14, cardBottom = G.y + G.h;
+        const elbow = (fromX, toX) => {
+          const dir = toX > fromX ? 1 : -1;
+          return 'M' + fromX + ' ' + cardBottom + 'V' + (G.busY - r) +
+            'A' + r + ' ' + r + ' 0 0 ' + (dir > 0 ? 0 : 1) + ' ' + (fromX + dir * r) + ' ' + G.busY +
+            'H' + toX;
+        };
+        const links =
+          elbow(cxOf(0), 450) + elbow(cxOf(n - 1), 450) +
+          'M' + cxOf(1) + ' ' + cardBottom + 'V' + G.busY +
+          'M450 ' + G.busY + 'V' + G.boxY;
+
+        const boxX = 450 - G.boxW / 2, sendCx = boxX + G.boxW - 34, sendCy = G.boxY + G.boxH / 2;
+
+        diagramFlow.innerHTML =
+          '<svg class="goals-svg" viewBox="0 0 900 470" preserveAspectRatio="xMidYMid meet" role="img" ' +
+          'aria-label="Let business experts iterate, make sure all the context is available, and keep costs down and speed up — all compressed into a single prompt.">' +
+            cards +
+            '<g class="goals-converge">' +
+              '<path class="goals-link" d="' + links + '"/>' +
+              '<rect class="goals-box" x="' + boxX + '" y="' + G.boxY + '" width="' + G.boxW +
+                '" height="' + G.boxH + '" rx="14"/>' +
+              '<text class="goals-box-placeholder" x="' + (boxX + 26) + '" y="' + (sendCy + 7) +
+                '" font-size="20">' + esc(cfg.prompt) + '</text>' +
+              '<circle class="goals-send" cx="' + sendCx + '" cy="' + sendCy + '" r="17"/>' +
+              '<path class="goals-send-arrow" d="M' + (sendCx - 6) + ' ' + sendCy + 'h12M' +
+                (sendCx + 2) + ' ' + (sendCy - 5) + 'l5 5-5 5"/>' +
+              // Caption is optional; nothing renders when there's no copy.
+              (cfg.caption
+                ? '<text class="goals-caption" text-anchor="middle" x="450" y="' +
+                    (G.boxY + G.boxH + 34) + '" font-size="15">' + esc(cfg.caption) + '</text>'
+                : '') +
+            '</g>' +
+          '</svg>';
+      }
+
+      // Stage 0 shows the aims; stage 1 converges them on the prompt.
+      function applyGoalsBuild(stage) {
+        const svg = diagramFlow.querySelector('.goals-svg');
+        if (!svg) return;
+        svg.querySelector('.goals-converge').classList.toggle('shown', stage >= 1);
+      }
+
+      // Left to right: one shared source forking into two tracks. Each step is a
+      // dot with its role above and what they did below; a step reveals together
+      // with the link that feeds it.
+      const PROC = {
+        sourceX: 110, midY: 210, topY: 132, botY: 288,
+        colX: [310, 520, 730], r: 14, sourceR: 16,
+        braceY: 372, noteY: 406, noteX: [110, 520]
+      };
+
+      // Reveal order, shared by the builder and the step generator.
+      function processParts(cfg) {
+        return [cfg.base].concat(cfg.left, cfg.right ? [cfg.right] : []);
+      }
+
+      function buildProcessDiagram(cfg) {
+        const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const P = PROC;
+
+        // What they did reads first, above the dot; the role anchors it below.
+        const labels = (l, x, y) => {
+          const lines = String(l.did).split('\n');
+          const n = lines.length;
+          return lines.map((ln, k) =>
+              '<text class="proc-did" text-anchor="middle" x="' + x + '" y="' +
+                (y - 30 - (n - 1 - k) * 20) + '">' + esc(ln) + '</text>').join('') +
+            '<text class="proc-role" text-anchor="middle" x="' + x + '" y="' + (y + 42) + '">' +
+              esc(l.role) + '</text>';
+        };
+
+        const step = (l, x, y, r, link) =>
+          '<g class="proc-step">' +
+            (link ? '<path class="proc-link" d="' + link + '"/>' : '') +
+            '<circle class="' + (l.outcome ? 'proc-dot-outcome' : 'proc-dot') + '" cx="' + x + '" cy="' + y +
+              '" r="' + r + '"/>' +
+            labels(l, x, y) +
+          '</g>';
+
+        let out = step(cfg.base, P.sourceX, P.midY, P.sourceR, null);
+
+        // The fork: a curve off the source into each track.
+        const forkFrom = P.sourceX + P.sourceR + 4;
+        const firstIn = P.colX[0] - P.r - 8;
+        const fork = y => 'M' + forkFrom + ' ' + P.midY + 'C' + (forkFrom + 70) + ' ' + P.midY +
+          ' ' + (firstIn - 70) + ' ' + y + ' ' + firstIn + ' ' + y;
+
+        cfg.left.forEach((l, i) => {
+          const x = P.colX[i];
+          const link = i === 0
+            ? fork(P.topY)
+            : 'M' + (P.colX[i - 1] + P.r + 8) + ' ' + P.topY + 'H' + (x - P.r - 8);
+          out += step(l, x, P.topY, P.r, link);
+        });
+
+        if (cfg.right) out += step(cfg.right, P.colX[0], P.botY, P.r, fork(P.botY));
+
+        const lastX = P.colX[cfg.left.length - 1];
+        out += '<path class="proc-brace" d="M' + (P.sourceX - 30) + ' ' + (P.braceY - 10) +
+          'V' + P.braceY + 'H' + (lastX + 30) + 'V' + (P.braceY - 10) + '"/>';
+
+        out += cfg.notes.map((n, i) =>
+          '<g class="proc-note">' +
+            '<text class="proc-note-title" x="' + P.noteX[i] + '" y="' + P.noteY + '">' + esc(n.title) + '</text>' +
+            (n.body || []).map((line, k) =>
+              '<text class="proc-note-body" x="' + P.noteX[i] + '" y="' + (P.noteY + 25 + k * 21) + '">' +
+                esc(line) + '</text>').join('') +
+          '</g>').join('');
+
+        diagramFlow.innerHTML =
+          '<svg class="proc-svg" viewBox="40 80 830 400" preserveAspectRatio="xMidYMid meet" role="img" ' +
+          'aria-label="A data engineer captured the data; from there an analytics engineer connected the sources, a data analyst defined the metrics and a subject matter expert makes the decision, while a data scientist takes it into production and automates the work.">' +
+            out +
+          '</svg>';
+      }
+
+      // Steps run along the top track, then the second track, then the notes.
+      function applyProcessBuild(stage) {
+        const svg = diagramFlow.querySelector('.proc-svg');
+        if (!svg) return;
+        const steps = svg.querySelectorAll('.proc-step');
+        const notes = svg.querySelectorAll('.proc-note');
+        steps.forEach((el, i) => el.classList.toggle('shown', stage >= i));
+        notes.forEach((el, i) => el.classList.toggle('shown', stage >= steps.length + i));
+        svg.querySelector('.proc-brace').classList.toggle('shown', stage >= steps.length);
+      }
+
+      // Goal at the top, what it actually turns on in the middle, the three
+      // levers along the bottom. Laid out on a 900x470 grid.
+      const TREE_CX = 450, TREE_BUS_Y = 300, TREE_COLS = [175, 450, 725];
+      const TREE_HUB = { y: 186, h: 68, rx: 34, padX: 30, size: 22 };
+      const TREE_CARD = { y: 332, w: 252, h: 116, rx: 14 };
+      const TREE_ROOT = { y: 20, w: 470, h: 82 };
+
+      function buildTreeDiagram(cfg) {
+        const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const cx = TREE_CX, busY = TREE_BUS_Y, C = TREE_CARD, r = 14;
+
+        // Arced elbows out to the outer columns; the middle drops straight.
+        const elbows =
+          'M' + cx + ' ' + busY + 'H' + (TREE_COLS[0] + r) +
+            'A' + r + ' ' + r + ' 0 0 0 ' + TREE_COLS[0] + ' ' + (busY + r) + 'V' + C.y +
+          'M' + cx + ' ' + busY + 'H' + (TREE_COLS[2] - r) +
+            'A' + r + ' ' + r + ' 0 0 1 ' + TREE_COLS[2] + ' ' + (busY + r) + 'V' + C.y +
+          'M' + cx + ' ' + busY + 'V' + C.y;
+
+        const icon = name => (window.SigmaIcons && SigmaIcons.has(name))
+          ? SigmaIcons.svg(name, { size: 38, color: 'currentColor' }) : '';
+
+        // Icon over label, the same card shape the goals slide uses — the
+        // branches are the payoff of the diagram and were the emptiest part
+        // of it.
+        const cols = cfg.branches.map((b, i) =>
+          '<g class="tree-col">' +
+            '<rect class="tree-branch-card" x="' + (TREE_COLS[i] - C.w / 2) + '" y="' + C.y +
+              '" width="' + C.w + '" height="' + C.h + '" rx="' + C.rx + '"/>' +
+            '<g class="tree-branch-icon" transform="translate(' + (TREE_COLS[i] - 19) + ' ' +
+              (C.y + 20) + ')">' + icon(b.icon) + '</g>' +
+            '<text class="tree-label-branch" text-anchor="middle" x="' + TREE_COLS[i] + '" y="' +
+              (C.y + 90) + '" font-size="22">' + esc(b.text) + '</text>' +
+          '</g>').join('');
+
+        diagramFlow.innerHTML =
+          '<svg class="tree-svg" viewBox="0 0 900 470" preserveAspectRatio="xMidYMid meet" role="img" ' +
+          'aria-label="Improve business performance depends on trusted, cost-effective decisions, which come in three forms: better, more and faster.">' +
+            '<rect class="tree-root" x="' + (TREE_CX - TREE_ROOT.w / 2) + '" y="' + TREE_ROOT.y +
+              '" width="' + TREE_ROOT.w + '" height="' + TREE_ROOT.h +
+              '" rx="' + (TREE_ROOT.h / 2) + '"/>' +
+            '<text class="tree-label-light" text-anchor="middle" x="' + cx + '" y="69" font-size="25">' +
+              esc(cfg.root) + '</text>' +
+
+            '<g class="tree-part tree-part-hub">' +
+              '<path class="tree-link" d="M' + cx + ' 102V' + TREE_HUB.y + '"/>' +
+              '<rect class="tree-hub" x="330" y="' + TREE_HUB.y + '" width="240" height="' + TREE_HUB.h +
+                '" rx="' + TREE_HUB.rx + '"/>' +
+              '<text class="tree-label-light tree-word-trusted" text-anchor="start" x="' + cx + '" y="228" ' +
+                'font-size="' + TREE_HUB.size + '">' + esc(cfg.hubPrefix || '') + '</text>' +
+              '<text class="tree-label-light tree-word-cost" text-anchor="start" x="' + cx + '" y="228" ' +
+                'font-size="' + TREE_HUB.size + '">' + esc(cfg.hubPrefix2 || '') + '</text>' +
+              '<text class="tree-label-light tree-word-decisions" text-anchor="start" x="' + cx + '" y="228" ' +
+                'xml:space="preserve" font-size="' + TREE_HUB.size + '">' + esc(cfg.hub) + '</text>' +
+            '</g>' +
+
+            '<g class="tree-part tree-part-branches">' +
+              '<path class="tree-link" d="M' + cx + ' ' + (TREE_HUB.y + TREE_HUB.h) + 'V' + busY + elbows + '"/>' +
+              cols +
+            '</g>' +
+          '</svg>';
+      }
+
+      // Stage 0 goal only, 1 adds the hub, 2 the branches, 3 and 4 qualify the
+      // hub — first trusted, then cost-effective.
+      let lastTreeBuild = null;
+
+      function applyTreeBuild(stage, cfg) {
+        const svg = diagramFlow.querySelector('.tree-svg');
+        if (!svg) return;
+        lastTreeBuild = { stage: stage, cfg: cfg };
+        const trusted = stage >= 3;
+        const costly = stage >= 4;
+        svg.querySelector('.tree-part-hub').classList.toggle('shown', stage >= 1);
+        svg.querySelector('.tree-part-branches').classList.toggle('shown', stage >= 2);
+        svg.classList.toggle('trusted', trusted);
+        svg.classList.toggle('costly', costly);
+
+        // Every word is anchored at its start, so the phrase has to be
+        // re-centred by hand each time a qualifier joins it.
+        const prefix = svg.querySelector('.tree-word-trusted');
+        const cost = svg.querySelector('.tree-word-cost');
+        const word = svg.querySelector('.tree-word-decisions');
+        const pill = svg.querySelector('.tree-hub');
+        if (cfg) {
+          const noun = (costly && cfg.hubMidPhrase) ? cfg.hubMidPhrase : cfg.hub;
+          // The leading space is the font's own rather than a hand-set gap, so
+          // it matches every other word space in the phrase.
+          word.textContent = trusted ? ' ' + noun : noun;
+        }
+        const wordW = word.getComputedTextLength();
+        if (!wordW) return;   // not laid out yet; the next call will place it
+        const prefixW = trusted ? prefix.getComputedTextLength() : 0;
+        // The second qualifier opens with a comma, so it butts straight up
+        // against the first.
+        const costW = costly ? cost.getComputedTextLength() : 0;
+        const total = prefixW + costW + wordW;
+        const left = TREE_CX - total / 2;
+        prefix.setAttribute('x', left);
+        cost.setAttribute('x', left + prefixW);
+        word.setAttribute('x', left + prefixW + costW);
+        pill.setAttribute('x', TREE_CX - (total / 2 + TREE_HUB.padX));
+        pill.setAttribute('width', total + TREE_HUB.padX * 2);
+      }
+
+      // The hub's layout comes from measured text, so it has to be laid out
+      // again once the webfont lands — measured in the fallback face the words
+      // overlap. Only bites on a cold load straight onto a tree step.
+      if (document.fonts) {
+        document.fonts.ready.then(function () {
+          if (lastTreeBuild && diagramFlow.querySelector('.tree-svg')) {
+            applyTreeBuild(lastTreeBuild.stage, lastTreeBuild.cfg);
+          }
+        });
+      }
+
+      function buildSeesawDiagram(cfg) {
+        const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const grad = (id, a, b, vertical) =>
+          '<linearGradient id="' + id + '" x1="0" y1="0" x2="' + (vertical ? 0 : 1) + '" y2="' + (vertical ? 1 : 0) + '">' +
+          '<stop offset="0" class="' + a + '"/><stop offset="1" class="' + b + '"/></linearGradient>';
+
+        // Cards cap each end of the beam; icon, headline and qualifier stack inside.
+        const pan = (cx, fill, icon, lines) => {
+          const w = 230, top = 117, h = 120, iconSize = 34;
+          return '<g filter="url(#seesawLift)">' +
+              '<rect x="' + (cx - w / 2) + '" y="' + top + '" width="' + w + '" height="' + h +
+                '" rx="16" fill="url(#' + fill + ')"/>' +
+            '</g>' +
+            '<g class="seesaw-icon" transform="translate(' + (cx - iconSize / 2) + ' ' + (top + 19) +
+              ') scale(' + (iconSize / 24).toFixed(3) + ')">' + SEESAW_ICONS[icon] + '</g>' +
+            '<text class="seesaw-pan-title" text-anchor="middle" x="' + cx + '" y="' + (top + 81) + '">' +
+              esc(lines[0]) + '</text>' +
+            '<text class="seesaw-pan-sub" text-anchor="middle" x="' + cx + '" y="' + (top + 107) + '">' +
+              esc(lines[1]) + '</text>';
+        };
+
+        diagramFlow.innerHTML =
+          '<svg class="seesaw-svg" viewBox="0 0 900 466" preserveAspectRatio="xMidYMid meet" role="img" ' +
+          'aria-label="A see-saw balancing speed against data completeness, pivoting on legacy systems.">' +
+            '<defs>' +
+              grad('seesawBeam', 'seesaw-stop-beam-a', 'seesaw-stop-beam-b') +
+              grad('seesawSpeed', 'seesaw-stop-speed-a', 'seesaw-stop-speed-b', true) +
+              grad('seesawData', 'seesaw-stop-data-a', 'seesaw-stop-data-b', true) +
+              grad('seesawFulcrum', 'seesaw-stop-fulcrum-a', 'seesaw-stop-fulcrum-b', true) +
+              '<filter id="seesawLift" x="-30%" y="-30%" width="160%" height="170%">' +
+                '<feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#171717" flood-opacity="0.22"/>' +
+              '</filter>' +
+            '</defs>' +
+
+            '<ellipse class="seesaw-shadow" cx="450" cy="352" rx="165" ry="10"/>' +
+            '<rect class="seesaw-plinth" x="330" y="338" width="240" height="14" rx="7"/>' +
+            '<path d="M450 242 520 340H380Z" fill="url(#seesawFulcrum)"/>' +
+
+            '<g class="seesaw-lever">' +
+              '<g filter="url(#seesawLift)">' +
+                '<rect x="120" y="237" width="660" height="22" rx="11" fill="url(#seesawBeam)"/>' +
+              '</g>' +
+              pan(235, 'seesawSpeed', 'speed', cfg.left) +
+              pan(665, 'seesawData', 'data', cfg.right) +
+            '</g>' +
+
+            '<text class="seesaw-fulcrum-label" text-anchor="middle" x="450" y="384">' +
+              esc(cfg.fulcrum) + '</text>' +
+          '</svg>';
+      }
+
+      function buildLinearDiagram(steps) {
+        diagramFlow.innerHTML = '';
+        steps.forEach((label, i) => {
+          if (i > 0) {
+            const arrow = document.createElement('span');
+            arrow.className = 'diagram-arrow';
+            arrow.textContent = '→';
+            diagramFlow.appendChild(arrow);
+          }
+          const stepEl = document.createElement('div');
+          stepEl.className = 'diagram-step';
+          const icon = document.createElement('div');
+          icon.className = 'diagram-step-icon';
+          icon.textContent = String(i + 1);
+          const labelEl = document.createElement('div');
+          labelEl.className = 'diagram-step-label';
+          labelEl.textContent = label;
+          stepEl.appendChild(icon);
+          stepEl.appendChild(labelEl);
+          diagramFlow.appendChild(stepEl);
+        });
+      }
+
+      // Geometry is transcribed from the source deck — 1 unit = 1/100 inch of
+      // the original slide — so the composition reads as the same diagram.
+      const LOOP_GEO = { cx: 493, cy: 290, ringOuter: 141, ringInner: 96.5, nodeR: 32.2, discR: 28.2 };
+
+      const LOOP_ICONS = {
+        warehouse: '<ellipse cx="12" cy="6.2" rx="7.6" ry="3.2"/><path d="M4.4 6.2v11.6c0 1.77 3.4 3.2 7.6 3.2s7.6-1.43 7.6-3.2V6.2"/><path d="M4.4 12c0 1.77 3.4 3.2 7.6 3.2s7.6-1.43 7.6-3.2"/>',
+        inspect: '<rect x="2.5" y="3.5" width="12" height="12" rx="2"/><path d="M2.5 7.5h12"/><path d="M7 7.5v8"/><circle class="loop-icon-punch" cx="16.5" cy="16.5" r="4.3"/><path d="M19.6 19.6 22 22"/>',
+        stopwatch: '<circle cx="12" cy="13.6" r="7.8"/><path d="M12 9.9v3.7h3"/><path d="M9.4 2.9h5.2"/><path d="M12 2.9v2.9"/><path d="M18.7 6.3 20.2 4.8"/>',
+        code: '<path d="M8 7.5 3.5 12 8 16.5"/><path d="M16 7.5 20.5 12 16 16.5"/><path d="M13.6 5.5 10.4 18.5"/>',
+        dashboard: '<rect x="2.5" y="4" width="19" height="16" rx="2.2"/><circle cx="8.4" cy="12" r="3.4"/><path d="M8.4 8.6v3.4h3.4"/><path d="M14.6 9.6h4.2"/><path d="M14.6 12.6h4.2"/><path d="M14.6 15.6h2.6"/>'
+      };
+
+      // One entry per label in OVERLAYS.more.diagram, in cycle order. `drop`
+      // is the x of a vertical leader for labels that sit below their node
+      // rather than beside it; `tone` picks the data-team vs business colour.
+      // The four cycle nodes ride the centre-line of the filled band
+      // (radius 118.75 = midway between the two rings), not its outer edge.
+      const LOOP_NODES = [
+        { x: 493, y: 409, icon: 'warehouse', tone: 'data', drop: 493, ruleY: 465, rule: [350, 493], anchor: 'end', tx: 493 },
+        { x: 612, y: 290, icon: 'inspect', tone: 'biz', ruleY: 269, rule: [644, 819], anchor: 'end', tx: 819 },
+        { x: 493, y: 171, icon: 'stopwatch', tone: 'biz', ruleY: 151, rule: [526, 701], anchor: 'end', tx: 701 },
+        { x: 374, y: 290, icon: 'code', tone: 'data', ruleY: 269, rule: [167, 342], anchor: 'start', tx: 167 },
+        { x: 760, y: 409, r: 42.5, disc: 37.2, icon: 'dashboard', tone: 'biz', drop: 787, ruleY: 471, rule: [612, 787], anchor: 'end', tx: 787 }
+      ];
+
+      function buildLoopDiagram(steps, callout) {
+        const G = LOOP_GEO;
+        const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const parts = [];
+
+        // The track: data-team side in, business side out to a dashboard.
+        // Sits under the whole loop, which crosses over it at the base.
+        // The inbound run reaches further left and fades up out of nothing, so
+        // the track reads as arriving rather than starting at a hard edge.
+        // Both gradients share the track's own coordinates, so the halo and the
+        // bar fade in lockstep.
+        const trackL = 150, trackR = 755;
+        const fade = (id, cls) =>
+          '<linearGradient id="' + id + '" gradientUnits="userSpaceOnUse" ' +
+          'x1="' + trackL + '" y1="409" x2="' + trackR + '" y2="409">' +
+          '<stop offset="0" class="' + cls + '" stop-opacity="0"/>' +
+          '<stop offset="0.35" class="' + cls + '" stop-opacity="1"/>' +
+          '<stop offset="1" class="' + cls + '" stop-opacity="1"/></linearGradient>';
+        parts.push('<defs>' + fade('loopFadeHalo', 'loop-stop-halo') + fade('loopFadeData', 'loop-stop-data') + '</defs>');
+
+        parts.push('<line class="loop-bar-halo" x1="' + trackL + '" y1="409" x2="' + trackR + '" y2="409"/>');
+        parts.push('<line class="loop-bar-data" x1="' + trackL + '" y1="409" x2="493" y2="409"/>');
+        parts.push('<line class="loop-bar-biz" x1="493" y1="409" x2="' + trackR + '" y2="409"/>');
+
+        // Fills the band between the two rings, tucked under both strokes.
+        const coreD = G.ringOuter * 2;
+        parts.push('<foreignObject x="' + (G.cx - G.ringOuter) + '" y="' + (G.cy - G.ringOuter) + '" ' +
+          'width="' + coreD + '" height="' + coreD + '">' +
+          '<div xmlns="http://www.w3.org/1999/xhtml" class="loop-core"></div></foreignObject>');
+
+        parts.push('<circle class="loop-ring" cx="' + G.cx + '" cy="' + G.cy + '" r="' + G.ringOuter + '"/>');
+        parts.push('<circle class="loop-ring-inner" cx="' + G.cx + '" cy="' + G.cy + '" r="' + G.ringInner + '"/>');
+
+        steps.forEach((label, i) => {
+          const node = LOOP_NODES[i];
+          if (!node) return;
+          const r = node.r || G.nodeR;
+          const disc = node.disc || G.discR;
+          parts.push('<g class="loop-node">');
+
+          let lead = 'M' + node.rule[0] + ' ' + node.ruleY + 'H' + node.rule[1];
+          if (node.drop !== undefined) {
+            const dx = node.drop - node.x;
+            const dy = Math.sqrt(Math.max(r * r - dx * dx, 0));
+            lead += 'M' + node.drop + ' ' + (node.y + dy + 8).toFixed(1) + 'V' + node.ruleY;
+          }
+          parts.push('<path class="loop-lead" d="' + lead + '"/>');
+
+          const tspans = String(label).split('\n')
+            .map((ln, k) => '<tspan x="' + node.tx + '" dy="' + (k ? 19 : 0) + '">' + esc(ln) + '</tspan>')
+            .join('');
+          parts.push('<text class="loop-label" text-anchor="' + node.anchor + '" x="' + node.tx + '" y="' + (node.ruleY + 20) + '">' + tspans + '</text>');
+
+          parts.push('<circle class="loop-halo" cx="' + node.x + '" cy="' + node.y + '" r="' + r + '"/>');
+          parts.push('<circle class="loop-disc-' + node.tone + '" cx="' + node.x + '" cy="' + node.y + '" r="' + disc + '"/>');
+
+          const box = disc * 1.06;
+          const tone = node.tone === 'data' ? 'var(--sigma-ink)' : 'var(--sigma-blue)';
+          parts.push('<g class="loop-icon" style="color:' + tone + '" transform="translate(' +
+            (node.x - box / 2).toFixed(1) + ' ' + (node.y - box / 2).toFixed(1) + ') scale(' + (box / 24).toFixed(3) + ')">' +
+            LOOP_ICONS[node.icon] + '</g>');
+
+          parts.push('<circle class="loop-focus-ring" cx="' + node.x + '" cy="' + node.y + '" r="' + (r + 8) + '"/>');
+          parts.push('</g>');
+        });
+
+        if (callout && callout.length) {
+          const lines = callout
+            .map((ln, k) => '<tspan x="815" dy="' + (k ? 23 : 0) + '">' + esc(ln) + '</tspan>')
+            .join('');
+          parts.push('<text class="loop-callout" x="815" y="402">' + lines + '</text>');
+        }
+
+        diagramFlow.innerHTML =
+          '<svg class="loop-svg" viewBox="150 120 711 418" preserveAspectRatio="xMidYMid meet" ' +
+          'role="img" aria-label="The data doom loop: analysts and the data team cycle through gap, ticket, and update, and the only way out is a dashboard.">' +
+          parts.join('') + '</svg>';
+      }
+
+      // Opens the Recents flyout off the sidebar, drops the item of interest in
+      // at the top, scripts a cursor moving to it and "clicking" it — that
+      // click is what actually reveals the diagram/video, instead of the
+      // whole chat sliding off screen.
+      // The scripted cursor walk to Recents reads well but costs ~2s per beat,
+      // which is too slow for moving through the deck. Set true to bring it back.
+      const CURSOR_TRANSITIONS = false;
+
+      // Scales the whole scripted-cursor sequence. The step timings below are
+      // written at their original pace; this is the one knob that retimes them.
+      const CURSOR_SPEED = 0.6;
+
+      function moveCursorTo(x, y, durationMs, easing) {
+        fakeCursor.style.transition = 'transform ' + Math.round(durationMs * CURSOR_SPEED) + 'ms ' + (easing || 'cubic-bezier(0.22, 0.61, 0.36, 1)');
+        fakeCursor.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+      }
+
+      function spawnRipple(x, y) {
+        const ripple = document.createElement('div');
+        ripple.className = 'click-ripple';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        chatSlide.appendChild(ripple);
+        const t = setTimeout(() => ripple.remove(), 550);
+        promptTimers.push(t);
+      }
+
+      function after(ms, fn) {
+        const t = setTimeout(fn, Math.round(ms * CURSOR_SPEED));
+        promptTimers.push(t);
+      }
+
+      // Cursor starts at the composer's send button (where the "hand" was
+      // last), glides up to the sidebar icon with a real hover pause before
+      // pressing, opens the menu, then glides down to the item and clicks it.
+      // Every stage has its own duration/easing so it reads as a deliberate
+      // human action rather than a mechanical snap.
+      function playRecentsSelect(label, onDone, startFrom) {
+        const existingTarget = recentsList.querySelector('li.target');
+        if (existingTarget) existingTarget.remove();
+        const targetLi = document.createElement('li');
+        targetLi.className = 'target';
+        targetLi.textContent = label;
+        recentsList.insertBefore(targetLi, recentsList.firstChild);
+
+        const stageRect = chatSlide.getBoundingClientRect();
+        const iconRect = railIconRecents.getBoundingClientRect();
+        const startRect = startFrom || (followupSend || followupBar).getBoundingClientRect();
+
+        const flyoutHeight = recentsFlyout.offsetHeight;
+        recentsFlyout.style.top = (iconRect.top - stageRect.top - flyoutHeight / 2 + iconRect.height / 2) + 'px';
+        recentsFlyout.style.left = (iconRect.right - stageRect.left + 14) + 'px';
+
+        const startX = startRect.left - stageRect.left + startRect.width / 2;
+        const startY = startRect.top - stageRect.top + startRect.height / 2;
+        const iconX = iconRect.left - stageRect.left + iconRect.width / 2;
+        const iconY = iconRect.top - stageRect.top + iconRect.height / 2;
+
+        // 0. Cursor fades in at the composer, sitting a beat before it moves —
+        // like the presenter's hand just landed on the mouse.
+        fakeCursor.style.transition = 'none';
+        fakeCursor.style.transform = 'translate(' + startX + 'px, ' + startY + 'px)';
+        void fakeCursor.offsetWidth;
+        fakeCursor.style.transition = 'opacity 0.25s ease';
+        fakeCursor.classList.add('visible');
+
+        after(500, () => {
+          // 1. Long glide up to the icon — slow start, no menu/press yet.
+          moveCursorTo(iconX, iconY, 950, 'cubic-bezier(0.33, 0, 0.2, 1)');
+
+          after(950, () => {
+            // 2. Arrives and hovers (lighter state) before actually clicking.
+            railIconRecents.classList.add('rail-hovering');
+
+            after(300, () => {
+              // 3. Click: ripple + press + menu opens a beat later.
+              railIconRecents.classList.remove('rail-hovering');
+              railIconRecents.classList.add('rail-pressed');
+              spawnRipple(iconX, iconY);
+
+              after(180, () => {
+                railIconRecents.classList.remove('rail-pressed');
+                railIconRecents.classList.add('rail-hovering');
+                recentsFlyout.classList.add('visible');
+
+                after(400, () => {
+                  // 4. Pause as if scanning the list, then glide to the item.
+                  railIconRecents.classList.remove('rail-hovering');
+                  const liRect = targetLi.getBoundingClientRect();
+                  const liX = liRect.left - stageRect.left + 14;
+                  const liY = liRect.top - stageRect.top + liRect.height / 2;
+                  moveCursorTo(liX, liY, 750, 'cubic-bezier(0.33, 0, 0.2, 1)');
+
+                  after(750, () => {
+                    // 5. Click the item.
+                    targetLi.classList.add('selected');
+                    spawnRipple(liX, liY);
+
+                    after(450, () => {
+                      recentsFlyout.classList.remove('visible');
+                      fakeCursor.classList.remove('visible');
+                      onDone();
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      }
+
+      function revealOverlayContent(kind, section, videoIndex, focus) {
+        chatLiveArea.classList.add('chat-off');
+        overlayStage.classList.add('visible');
+
+        if (kind === 'diagram') {
+          diagramPanel.classList.add('visible');
+          videoPanel.classList.remove('visible');
+          unmountVideo();
+          diagramEyebrow.textContent = OVERLAYS[section].diagramTitle || 'Before';
+          // Rebuilding would restart the ring's rotation, so only do it when
+          // the section actually changes — stepping just re-applies focus.
+          if (diagramFlow.dataset.section !== section) {
+            buildDiagram(OVERLAYS[section].diagram, OVERLAYS[section].diagramLayout, OVERLAYS[section].diagramCallout);
+            diagramFlow.dataset.section = section;
+          }
+          const layout = OVERLAYS[section].diagramLayout;
+          if (layout === 'tree') applyTreeBuild(focus || 0, OVERLAYS[section].diagram);
+          else if (layout === 'process') applyProcessBuild(focus || 0);
+          else if (layout === 'goals') applyGoalsBuild(focus || 0);
+          else applyLoopFocus(focus);
+        } else {
+          videoPanel.classList.add('visible');
+          diagramPanel.classList.remove('visible');
+          diagramFlow.dataset.section = '';
+          renderVideo(OVERLAYS[section].videos[videoIndex]);
+        }
+      }
+
+      function wistiaIframe(video) {
+        // Wistia's `time` param seeks the player on load.
+        const at = video.start ? '?time=' + encodeURIComponent(video.start) : '';
+        return '<iframe class="video-embed wistia_embed" name="wistia_embed" ' +
+          'src="https://fast.wistia.net/embed/iframe/' + encodeURIComponent(video.wistia) + at + '" ' +
+          'title="' + video.label.replace(/"/g, '&quot;') + '" ' +
+          'allow="autoplay; fullscreen" allowtransparency="true" frameborder="0" scrolling="no" ' +
+          'msallowfullscreen></iframe>';
+      }
+
+      // A video that needs a playback rate, a forced mute or captions on by
+      // default has to go through Wistia's JS API, which the iframe embed
+      // doesn't expose — those use the inline embed instead. The script loads
+      // on demand, and if it doesn't come up the iframe takes over so there's
+      // never a dead box on stage.
+      function videoNeedsApi(video) {
+        return !!(video.wistia && (video.rate || video.muted || video.captions));
+      }
+
+      let wistiaScript = null;
+      let wistiaHandle = null;
+      let wistiaHandleId = null;
+      let wistiaFallback = null;
+      let wistiaFit = null;
+
+      function renderApiVideo(video) {
+        if (!wistiaScript) {
+          wistiaScript = document.createElement('script');
+          wistiaScript.src = 'https://fast.wistia.com/assets/external/E-v1.js';
+          wistiaScript.async = true;
+          document.head.appendChild(wistiaScript);
+        }
+        window._wq = window._wq || [];
+
+        const id = video.wistia;
+        videoFrame.innerHTML = '<div class="video-embed wistia_embed wistia_async_' + id +
+          '" style="width:100%;height:100%"></div>';
+
+        // Captions have to be asked for at embed time; the track already
+        // exists on the media, this just turns it on without a click.
+        const options = video.captions
+          ? { plugin: { 'captions-v1': { onByDefault: true, language: 'eng' } } }
+          : {};
+
+        window._wq.push({ id: id, options: options, onReady: function (v) {
+          clearTimeout(wistiaFallback);
+          wistiaFallback = null;
+          wistiaHandle = v;
+          wistiaHandleId = id;
+
+          // Sized from the frame rather than left to videoFoam: the embed
+          // initialises while the overlay is still coming up, so foam can
+          // measure a zero width and collapse the player to nothing.
+          wistiaFit = function () {
+            const w = Math.round(videoFrame.getBoundingClientRect().width);
+            if (w > 0) v.width(w, { constrain: true });
+          };
+          requestAnimationFrame(wistiaFit);
+          window.addEventListener('resize', wistiaFit);
+
+          if (video.start) v.time(video.start);
+          if (video.muted) v.mute();
+          if (video.rate) v.playbackRate(video.rate);
+
+          // Re-applied on every play, so hitting play always comes up the way
+          // it's meant to even after a seek, a scrub, or a stray unmute.
+          v.bind('play', function () {
+            if (video.rate) v.playbackRate(video.rate);
+            if (video.muted) v.mute();
+          });
+        }});
+
+        wistiaFallback = setTimeout(function () {
+          if (!wistiaHandle) videoFrame.innerHTML = wistiaIframe(video);
+        }, 4500);
+      }
+
+      function renderVideo(video) {
+        videoCaption.textContent = video.label;
+        // These are screen recordings, not 16:9 — match each one's real shape
+        // so the player isn't letterboxed inside the frame.
+        videoFrame.style.aspectRatio = video.ratio || '16 / 9';
+        if (video.image) {
+          // A screenshot rides in the same frame as the players, so the
+          // sequence of demos keeps one shape and one caption style.
+          videoFrame.innerHTML = '<img class="video-embed video-still" src="' + video.image +
+            '" alt="' + video.label.replace(/"/g, '&quot;') + '">';
+        } else if (videoNeedsApi(video)) {
+          renderApiVideo(video);
+        } else if (video.wistia) {
+          videoFrame.innerHTML = wistiaIframe(video);
+        } else {
+          videoFrame.innerHTML = VIDEO_PLACEHOLDER;
+        }
+      }
+
+      // Tearing the embed out is what actually stops playback — leaving it
+      // mounted behind a hidden overlay keeps the audio going.
+      function unmountVideo() {
+        clearTimeout(wistiaFallback);
+        wistiaFallback = null;
+        if (wistiaFit) {
+          window.removeEventListener('resize', wistiaFit);
+          wistiaFit = null;
+        }
+        if (wistiaHandle) {
+          // Revoke the queued options too, or re-entering the slide stacks
+          // another set of handlers on the same video.
+          if (window._wq) window._wq.push({ id: wistiaHandleId, revoke: true });
+          try { wistiaHandle.remove(); } catch (e) { /* already gone */ }
+          wistiaHandle = null;
+          wistiaHandleId = null;
+        }
+        if (videoFrame.querySelector('iframe, .wistia_embed')) videoFrame.innerHTML = VIDEO_PLACEHOLDER;
+      }
+
+      function showOverlay(kind, section, videoIndex, focus) {
+        // Already on this diagram — this is a step within it, not a new arrival.
+        if (kind === 'diagram' && overlayStage.classList.contains('visible') &&
+            diagramFlow.dataset.section === section) {
+          revealOverlayContent(kind, section, videoIndex, focus);
+          return;
+        }
+        clearPromptTimers();
+        recentsFlyout.classList.remove('visible');
+        fakeCursor.classList.remove('visible');
+        railIconRecents.classList.remove('rail-pressed', 'rail-hovering');
+        chatSlide.querySelectorAll('.click-ripple').forEach(el => el.remove());
+
+        unmountVideo();
+        if (!CURSOR_TRANSITIONS) {
+          revealOverlayContent(kind, section, videoIndex, focus);
+          return;
+        }
+
+        const label = kind === 'diagram' ? SECTION_LABELS[section] : OVERLAYS[section].videos[videoIndex].label;
+        playRecentsSelect(label, () => revealOverlayContent(kind, section, videoIndex, focus));
+      }
+
+      // Coming back from a diagram or video, the presenter goes to Recents and
+      // reopens the conversation they left — the mirror of showOverlay, so the
+      // chat never just reappears on its own.
+      function playRecentsReturn(onDone) {
+        if (!CURSOR_TRANSITIONS) { onDone(); return; }
+        clearPromptTimers();
+        chatSlide.querySelectorAll('.click-ripple').forEach(el => el.remove());
+        const title = chatSlide.querySelector('.topbar-title').textContent.trim();
+        playRecentsSelect(title, onDone, overlayStage.getBoundingClientRect());
+      }
+
+      function hideOverlay() {
+        chatLiveArea.classList.remove('chat-off');
+        overlayStage.classList.remove('visible');
+        diagramPanel.classList.remove('visible');
+        videoPanel.classList.remove('visible');
+        unmountVideo();
+        railIconRecents.classList.remove('rail-pressed', 'rail-hovering');
+        recentsFlyout.classList.remove('visible');
+        fakeCursor.classList.remove('visible');
+        chatSlide.querySelectorAll('.click-ripple').forEach(el => el.remove());
+      }
+
+      // Every beat gets its own URL so one can be linked to or reopened
+      // directly. Number first — it matches the on-screen counter — then a
+      // slug so the link says where it goes.
+      function stepSlug(i) {
+        return (i + 1) + '-' + RUNNING_STEPS[i].label.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+
+      function stepFromHash() {
+        const raw = decodeURIComponent(location.hash.slice(1)).trim().toLowerCase();
+        if (!raw) return -1;
+        const n = parseInt(raw, 10);
+        if (n >= 1 && n <= RUNNING_STEPS.length) return n - 1;
+        return RUNNING_STEPS.findIndex((_, i) => stepSlug(i).replace(/^\d+-/, '') === raw);
+      }
+
+      function setStepIndicator() {
+        document.getElementById('progress').textContent = (current + 1) + ' / ' + RUNNING_STEPS.length;
+        const hash = '#' + stepSlug(current);
+        // replaceState, not pushState — arrow keys already own back/forward,
+        // and pushing would make the browser's Back button fight them.
+        if (location.hash !== hash) history.replaceState(null, '', hash);
+      }
+
+      function render() {
+        const step = RUNNING_STEPS[current];
+        DISTINCT_SLIDES.forEach(s => s.classList.toggle('active', s === step.slide));
+        setStepIndicator();
+
+        if (step.slide === chatSlide) {
+          // An overlay reached from a standalone slide covers the chat
+          // completely, so there's nothing to gain from animating the
+          // conversation underneath it first — snap straight to the beat and
+          // put the overlay up now.
+          if (chatSuspended && step.kind === 'overlay') {
+            chatSuspended = false;
+            jumpTo(current);
+            return;
+          }
+
+          // Coming back from a standalone slide to a beat we've already played
+          // means the audience is seeing it again — replay it rather than
+          // showing it pre-resolved. Going forward instead resumes mid-thread.
+          if (chatSuspended && step.requiredFrame <= chatShownFrame) {
+            chatEntered = false;
+            chatShownFrame = -1;
+          }
+          chatSuspended = false;
+
+          if (!chatEntered) {
+            resetChat();
+            chatEntered = true;
+          }
+
+          pendingStep = step;
+          desiredFrame = step.requiredFrame;
+          reconcile();
+        } else {
+          // Hold the conversation's progress: a slide sandwiched between two
+          // chat beats shouldn't replay the whole build on the way back. A turn
+          // caught mid-animation is settled to its finished state first —
+          // otherwise returning would replay whatever hadn't finished.
+          clearPromptTimers();
+          chatAnimating = false;
+          if (chatEntered && desiredFrame > chatShownFrame) {
+            snapChatToFrame(desiredFrame);
+            chatShownFrame = desiredFrame;
+          }
+          chatSuspended = true;
+          pendingStep = null;
+          appliedStepIndex = -1;
+          applySlideBuild(step);
+          hideOverlay();
+        }
+      }
+
+      function goTo(i) {
+        if (i < 0 || i >= RUNNING_STEPS.length) return;
+        current = i;
+        render();
+      }
+
+      function next() { goTo(current + 1); }
+      function prev() { goTo(current - 1); }
+
+      // Snaps straight to a step's fully-resolved state — no typing, no
+      // turn-exit animation, no recents-menu click. Used by the slide-jump
+      // grid, where the point is to skip ahead instantly, not replay.
+      // Renders one frame fully resolved, with every other turn retired. Used
+      // when a frame has to appear without animating — a grid jump, or leaving
+      // the chat part-way through a turn so returning doesn't replay it.
+      function snapChatToFrame(frameIndex) {
+        [0, 1, 2].forEach(resetTurnDom);
+        resetFollowup();
+        recentsFlyout.classList.remove('visible');
+        fakeCursor.classList.remove('visible');
+        railIconRecents.classList.remove('rail-pressed', 'rail-hovering');
+        chatSlide.querySelectorAll('.click-ripple').forEach(el => el.remove());
+
+        // In a live run the earlier turns have already scrolled off the top.
+        // resetTurnDom leaves turn 0's composer mounted and the welcome header
+        // showing, so retire them here or they eat the top of the feed.
+        const shownTurn = CHAT_FRAMES[frameIndex].turn;
+        promptBoxes.forEach((box, t) => {
+          if (t === shownTurn) return;
+          hideInstant(box);
+          hideInstant(assistantTurns[t]);
+        });
+        if (shownTurn > 0) welcomeHeader.classList.add('hidden');
+
+        instantRenderFrame(CHAT_FRAMES[frameIndex]);
+      }
+
+      function jumpTo(i) {
+        if (i < 0 || i >= RUNNING_STEPS.length) return;
+        clearPromptTimers();
+
+        current = i;
+        const step = RUNNING_STEPS[i];
+        DISTINCT_SLIDES.forEach(s => s.classList.toggle('active', s === step.slide));
+        setStepIndicator();
+
+        if (step.slide !== chatSlide) {
+          // Same reasoning as render(): hold the chat's progress so arrowing
+          // onward from here picks the conversation back up where it was.
+          chatAnimating = false;
+          pendingStep = null;
+          appliedStepIndex = -1;
+          applyRingAnnotation(undefined);
+          applySlideBuild(step);
+          hideOverlay();
+          return;
+        }
+
+        snapChatToFrame(step.requiredFrame);
+        chatEntered = true;
+        chatAnimating = false;
+        chatShownFrame = step.requiredFrame;
+        desiredFrame = step.requiredFrame;
+        pendingStep = step;
+        appliedStepIndex = i;
+
+        applyOptionPick(step.pick);
+        applyRingAnnotation(step.annotate);
+
+        if (step.kind === 'overlay') {
+          revealOverlayContent(step.overlay, step.section, step.videoIndex, step.focus);
+        } else {
+          hideOverlay();
+        }
+      }
+
+      // ---- Slide-jump grid: click the top-right button to see every nav
+      // step as a numbered tile and skip straight to it ----
+      const slideNavBtn = document.getElementById('slideNavBtn');
+      const slideNavOverlay = document.getElementById('slideNavOverlay');
+      const slideNavClose = document.getElementById('slideNavClose');
+      const slideNavGrid = document.getElementById('slideNavGrid');
+
+      function buildSlideNavGrid() {
+        slideNavGrid.innerHTML = '';
+        RUNNING_STEPS.forEach((step, i) => {
+          const tile = document.createElement('button');
+          tile.type = 'button';
+          tile.className = 'slide-nav-tile' + (i === current ? ' current' : '');
+
+          const num = document.createElement('div');
+          num.className = 'num';
+          num.textContent = String(i + 1);
+
+          const lbl = document.createElement('div');
+          lbl.className = 'lbl';
+          lbl.textContent = step.label || '';
+
+          tile.appendChild(num);
+          tile.appendChild(lbl);
+          tile.addEventListener('click', () => {
+            jumpTo(i);
+            closeSlideNav();
+          });
+          slideNavGrid.appendChild(tile);
+        });
+      }
+
+      function openSlideNav() {
+        buildSlideNavGrid();
+        slideNavOverlay.classList.add('visible');
+      }
+
+      function closeSlideNav() {
+        slideNavOverlay.classList.remove('visible');
+      }
+
+      slideNavBtn.addEventListener('click', openSlideNav);
+      slideNavClose.addEventListener('click', closeSlideNav);
+      slideNavOverlay.addEventListener('click', (e) => {
+        if (e.target === slideNavOverlay) closeSlideNav();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (slideNavOverlay.classList.contains('visible')) {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeSlideNav();
+          }
+          return;
+        }
+
+        switch (e.key) {
+          case 'ArrowRight':
+          case ' ':
+          case 'PageDown':
+            e.preventDefault();
+            next();
+            break;
+          case 'ArrowLeft':
+          case 'PageUp':
+            e.preventDefault();
+            prev();
+            break;
+          case 'Home':
+            e.preventDefault();
+            goTo(0);
+            break;
+          case 'End':
+            e.preventDefault();
+            goTo(RUNNING_STEPS.length - 1);
+            break;
+        }
+      });
+
+      // Pasting a different step into the address bar navigates there; a bare
+      // number (#9) works too. replaceState doesn't fire this, so no loop.
+      window.addEventListener('hashchange', () => {
+        const i = stepFromHash();
+        if (i >= 0 && i !== current) jumpTo(i);
+      });
+
+      const initialStep = stepFromHash();
+      if (initialStep > 0) jumpTo(initialStep);
+      else render();
+    })();
+  </script>
+
+</body>
+</html>
